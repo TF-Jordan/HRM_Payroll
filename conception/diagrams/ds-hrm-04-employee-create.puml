@@ -17,6 +17,16 @@ participant "OutboxEvent\n<<kernel-core>>" as outbox
 admin -> ctrl : POST /api/v1/hrm/employees\n{\n  actorId: "uuid-actor",\n  numCnps: "987654-B",\n  categorie: 5, echelon: "B",\n  departmentCode: "IT",\n  modePaiement: "MTN_MOBILE_MONEY",\n  numMobileMoney: "6XXXXXXXX",\n  contrat: {\n    type: "CDI",\n    salaireBase: 350000,\n    dateDebut: "2026-04-01"\n  }\n}
 activate ctrl
 
+note right of ctrl
+  tenantId et organizationId sont
+  extraits **implicitement** du JWT
+  via le SecurityContext (kernel-core).
+  L'Admin RH ne les spécifie jamais.
+  **agencyId** peut être passé
+  optionnellement pour rattacher
+  l'employé à une agence.
+end note
+
 ctrl -> svc : createEmployee(request)
 activate svc
 
