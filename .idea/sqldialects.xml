@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V10__invoice_settlements.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V11__resource_reservations_and_assignment_closure.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V12__domain_event_projection_source_event.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V13__identity_and_organization_parity.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V14__parity_completion.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V15__administration_core.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V16__rbac_multiscope.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V17__administration_governance_and_platform_options.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V18__legacy_tiers_users_audit_files.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V19__third_party_qualification.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V1__baseline.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V20__third_party_follow_up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V21__client_applications.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V22__organization_service_subscriptions.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V2__sales_and_accounting_lines.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V3__treasury_indexes.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V4__resource_indexes.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V5__resource_lifecycle.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V6__kernel_outbox.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V7__integration_projections.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V8__outbox_relay_policy.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V9__inventory_stock_movement_source_document.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/test/resources/db/changelog/contracts/sql/accounting-treasury-contract-seed.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/test/resources/db/changelog/contracts/sql/contract-cleanup.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/test/resources/db/changelog/contracts/sql/identity-access-contract-seed.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/test/resources/db/changelog/contracts/sql/organization-catalog-contract-seed.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/test/resources/db/changelog/contracts/sql/resource-contract-seed.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/test/resources/db/changelog/contracts/sql/sales-inventory-contract-seed.sql" dialect="GenericSQL" />
+  </component>
+</project>

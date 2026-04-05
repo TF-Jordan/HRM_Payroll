@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-resource-indexes
+      author: codex
+      sqlFile:
+        path: ../../r2dbc/V4__resource_indexes.sql
+        relativeToChangelogFile: true

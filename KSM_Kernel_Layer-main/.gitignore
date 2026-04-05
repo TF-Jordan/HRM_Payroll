@@ -1,0 +1,13 @@
+.env.preprod
+.env.prod
+ops/secrets/preprod/*.txt
+ops/secrets/prod/*.txt
+ops/nginx/certs/preprod/*
+ops/nginx/certs/prod/*
+!ops/secrets/preprod/.gitkeep
+!ops/secrets/prod/.gitkeep
+!ops/nginx/certs/preprod/.gitkeep
+!ops/nginx/certs/prod/.gitkeep
+
+*/target
+RT-comops-bootstrap/data/files/
