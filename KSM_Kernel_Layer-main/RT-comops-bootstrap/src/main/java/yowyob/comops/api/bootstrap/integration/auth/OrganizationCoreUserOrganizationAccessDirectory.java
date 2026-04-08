@@ -21,6 +21,6 @@ public class OrganizationCoreUserOrganizationAccessDirectory implements UserOrga
     public Flux<UserOrganizationAccess> listUserOrganizations(UUID tenantId, UUID userId) {
         return listUserOrganizationAccessUseCase.listUserOrganizationAccess(tenantId, userId)
                 .map(view -> new UserOrganizationAccess(view.organizationId(), view.organizationCode(),
-                        view.displayName(), view.legalName(), view.services()));
+                        view.shortName(), view.longName(), view.services()));
     }
 }

@@ -233,6 +233,71 @@ class ApiIntegrationTests {
     }
 
     @Test
+    void organizationServiceQuotaCanBeViewedAndUpdated() {
+        TestUser user = bootstrapUser("service-quota-admin", Set.of("organizations:write"));
+        String organizationId = createOwnedOrganization(user, "ORG-QTY-" + UUID.randomUUID().toString().substring(0, 6));
+
+        userClient(user).get()
+                .uri("/api/organizations/{organizationId}/services", organizationId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.serviceQuotas[?(@.serviceCode=='SALES')].requestQuotaLimit").isEqualTo(10000)
+                .jsonPath("$.data.serviceQuotas[?(@.serviceCode=='SALES')].requestQuotaWindowSeconds").isEqualTo(60);
+
+        userClient(user).patch()
+                .uri("/api/organizations/{organizationId}/services/{serviceCode}/quota", organizationId, "SALES")
+                .bodyValue(Map.of(
+                        "requestQuotaLimit", 25,
+                        "requestQuotaWindowSeconds", 120))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.serviceQuotas[?(@.serviceCode=='SALES')].requestQuotaLimit").isEqualTo(25)
+                .jsonPath("$.data.serviceQuotas[?(@.serviceCode=='SALES')].requestQuotaWindowSeconds").isEqualTo(120);
+    }
+
+    @Test
+    void clientApplicationAllowedServicesRestrictMappedModules() {
+        TestUser adminUser = bootstrapUser("client-service-scope",
+                Set.of("iam:admin", "organizations:write", "sales:write"));
+        String organizationId = createOwnedOrganization(adminUser,
+                "ORG-SCOPE-" + UUID.randomUUID().toString().substring(0, 6));
+
+        AtomicReference<String> scopedSecret = new AtomicReference<>();
+        userClient(adminUser).post()
+                .uri("/api/client-applications")
+                .bodyValue(Map.of(
+                        "clientId", "sales-only-backend",
+                        "name", "Sales Only Backend",
+                        "description", "Dedicated backend limited to sales endpoints.",
+                        "allowedServices", List.of("SALES")))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.data.clientApplication.allowedServices").value(value -> org.assertj.core.api.Assertions
+                        .assertThat((java.util.List<String>) (java.util.List<?>) value)
+                        .containsExactly("SALES"))
+                .jsonPath("$.data.clientSecret").value(value -> scopedSecret.set(value.toString()));
+
+        WebTestClient salesOnlyClient = userClient(adminUser, "sales-only-backend", scopedSecret.get()).mutate()
+                .defaultHeader("X-Organization-Id", organizationId)
+                .build();
+
+        salesOnlyClient.get()
+                .uri("/api/organizations/my")
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody()
+                .jsonPath("$.errorCode").isEqualTo("CLIENT_APPLICATION_SERVICE_NOT_ALLOWED");
+
+        salesOnlyClient.get()
+                .uri("/api/sales/orders/{orderId}", UUID.randomUUID())
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
     void clientApplicationsCanBeCreatedRotatedAndRevokedByIamAdmin() {
         TestUser adminUser = bootstrapUser("client-admin", Set.of("iam:admin"));
         AtomicReference<String> actorId = new AtomicReference<>();
@@ -272,6 +337,9 @@ class ApiIntegrationTests {
                 .expectBody()
                 .jsonPath("$.data.clientApplication.id").value(value -> clientApplicationId.set(value.toString()))
                 .jsonPath("$.data.clientApplication.clientId").isEqualTo("erp-backend")
+                .jsonPath("$.data.clientApplication.allowedServices").value(value -> org.assertj.core.api.Assertions
+                        .assertThat((java.util.List<String>) (java.util.List<?>) value)
+                        .contains("ORGANIZATION", "SALES", "RESOURCE"))
                 .jsonPath("$.data.clientSecret").value(value -> firstSecret.set(value.toString()));
 
         userClient(adminUser).get()
@@ -280,6 +348,19 @@ class ApiIntegrationTests {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.data[?(@.clientId=='erp-backend')]").exists();
+
+        userClient(adminUser).patch()
+                .uri("/api/client-applications/{clientApplicationId}", clientApplicationId.get())
+                .bodyValue(Map.of(
+                        "name", "ERP Backend",
+                        "description", "ERP integration backend",
+                        "allowedServices", List.of("COMMERCIAL", "SALES")))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.data.allowedServices").value(value -> org.assertj.core.api.Assertions
+                        .assertThat((java.util.List<String>) (java.util.List<?>) value)
+                        .containsExactly("COMMERCIAL", "SALES"));
 
         webTestClient.post()
                 .uri("/api/auth/login")
@@ -1956,6 +2037,18 @@ class ApiIntegrationTests {
     private WebTestClient organizationUserClient(TestUser user, String organizationId) {
         return userClient(user).mutate()
                 .defaultHeader("X-Organization-Id", organizationId)
+                .build();
+    }
+
+    private WebTestClient userClient(TestUser user, String clientId, String apiKey) {
+        return webTestClient.mutate()
+                .defaultHeader("X-Client-Id", clientId)
+                .defaultHeader("X-Api-Key", apiKey)
+                .defaultHeader("X-Tenant-Id", TENANT_ID)
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + userSessionTokenService.issue(
+                        UUID.fromString(TENANT_ID),
+                        UUID.fromString(user.userId()),
+                        UUID.fromString(user.actorId())))
                 .build();
     }
 

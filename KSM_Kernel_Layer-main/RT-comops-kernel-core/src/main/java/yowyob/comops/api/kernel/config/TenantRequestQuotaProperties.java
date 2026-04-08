@@ -11,6 +11,7 @@ public class TenantRequestQuotaProperties {
     private Duration window = Duration.ofMinutes(1);
     private boolean failOpen = true;
     private String keyPrefix = "iwm:quotas:tenant-requests";
+    private String coreServiceCode = "CORE";
 
     public boolean isEnabled() {
         return enabled;
@@ -50,5 +51,13 @@ public class TenantRequestQuotaProperties {
 
     public void setKeyPrefix(String keyPrefix) {
         this.keyPrefix = keyPrefix;
+    }
+
+    public String getCoreServiceCode() {
+        return coreServiceCode;
+    }
+
+    public void setCoreServiceCode(String coreServiceCode) {
+        this.coreServiceCode = coreServiceCode;
     }
 }

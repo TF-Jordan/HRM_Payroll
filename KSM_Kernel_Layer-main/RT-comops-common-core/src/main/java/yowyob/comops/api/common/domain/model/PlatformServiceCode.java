@@ -1,4 +1,4 @@
-package yowyob.comops.api.organization.domain.model;
+package yowyob.comops.api.common.domain.model;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;

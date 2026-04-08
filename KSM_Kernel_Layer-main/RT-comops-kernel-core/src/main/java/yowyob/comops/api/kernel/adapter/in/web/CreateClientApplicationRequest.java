@@ -4,5 +4,6 @@ public record CreateClientApplicationRequest(
         String clientId,
         String name,
         String description,
-        String clientSecret) {
+        String clientSecret,
+        java.util.List<String> allowedServices) {
 }

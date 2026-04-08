@@ -45,10 +45,14 @@ Backend Spring Boot multi-modules aligne sur conceptioKernel_V3.
 - `tp-core` couvre aussi la qualification commerciale au-dela du legacy: segment et score de qualification
 - `auth-core` expose aussi le self-service utilisateur `users/me`, plan et onboarding
 - `auth-core` emet maintenant un bearer access token JWT signe en `RS256`, avec alias `sessionToken` conservé pour compatibilite
-- `kernel-core` authentifie maintenant les backends consommateurs via de vraies `ClientApplication` (`X-Client-Id` + `X-Api-Key`)
+- `kernel-core` authentifie maintenant les backends consommateurs via de vraies `ClientApplication` (`X-Client-Id` + `X-Api-Key`) et borne chaque backend a une liste `allowedServices`
 - `organization-core` gere maintenant les abonnements de services par organisation et expose `effectiveServices`
+- chaque abonnement de service d'organisation porte maintenant un quota propre `requestQuotaLimit + requestQuotaWindowSeconds`
 - `auth-core` retourne aussi les organisations accessibles et leurs services dans `login` et `users/me`
+- `kernel-core` applique maintenant cinq couches de controle sur les APIs metier: `ClientApplication` valide, `ClientApplication` autorisee sur le service, quota backend `tenant + client + service`, organisation abonnee et soumise a quota sur le service, puis permission utilisateur au bon scope
 - `kernel-core` bloque maintenant les endpoints metier scopes organisation si `X-Organization-Id` est absent ou si l'organisation n'est pas abonnée au service requis
+- le quota backend Redis est maintenant porte par `(tenantId, clientId, serviceCode, bucket)` au lieu du seul tenant
+- le quota metier Redis est maintenant aussi porte par `(tenantId, organizationId, serviceCode, bucket)` pour les services abonables d'organisation
 - `kernel-core` expose un audit systeme consultable
 - `kernel-core` expose aussi le JWK Set public `/.well-known/jwks.json`
 - `file-core` gere l upload/download de fichiers avec metadonnees en base, binaire sur stockage local configurable, validation de type MIME et durcissement anti path traversal
@@ -64,8 +68,11 @@ Backend Spring Boot multi-modules aligne sur conceptioKernel_V3.
 - Redis: optionnel, active pour le cache des permissions
 - Elasticsearch: optionnel, active pour les projections de recherche
 - le mode server-to-server repose sur une `ClientApplication` bootstrap optionnelle configuree par environnement
+- le client bootstrap peut etre borne a un sous-ensemble de services via `IWM_BOOTSTRAP_CLIENT_ALLOWED_SERVICES`
 - l auth utilisateur accepte un bearer JWT RS256 via `Authorization: Bearer ...`
 - le mode dev/test peut auto-generer une paire RSA avec `IWM_JWT_AUTO_GENERATE_KEY_PAIR=true`
+- le quota backend s appuie sur `tenant + client application + service`, avec un fallback configurable `IWM_TENANT_REQUEST_QUOTA_CORE_SERVICE_CODE` pour les routes non mappees
+- le quota metier d'organisation s appuie sur `tenant + organization + service`, avec des valeurs par abonnement et des defaults `IWM_ORGANIZATION_SERVICE_DEFAULT_REQUEST_QUOTA_*`
 
 ## Validation
 - suite standard:
@@ -168,7 +175,8 @@ mvn -q -pl iwm-bootstrap -am \
 - `/actuator/**` n est pas expose par le gateway
 - `GET /healthz` est public via le gateway
 - rate limiting Nginx par IP et par tenant
-- quota backend par tenant via Redis, activable par configuration
+- quota backend par `tenant + client application + service` via Redis, activable par configuration
+- quota metier par `tenant + organization + service` via Redis, activable par configuration
 
 ## Surface ops
 - `GET /actuator/health/operations`
@@ -193,11 +201,13 @@ mvn -q -pl iwm-bootstrap -am \
 ## Bootstrap securise
 - `GET /api/client-applications`
 - `POST /api/client-applications`
+- `PATCH /api/client-applications/{clientApplicationId}`
 - `POST /api/client-applications/{clientApplicationId}/rotate-secret`
 - `POST /api/client-applications/{clientApplicationId}/revoke`
 - `POST /api/auth/register` et `POST /api/roles/**` ne sont plus ouverts a un simple client applicatif sans contexte utilisateur
 - en exploitation normale, ces endpoints exigent un utilisateur authentifie porteur de `system:admin` ou `iam:admin`
 - pour un bootstrap initial controle, on peut provisionner un `bootstrap client application` via les variables `IWM_BOOTSTRAP_CLIENT_*`
+- les services autorises du client bootstrap peuvent etre bornes via `IWM_BOOTSTRAP_CLIENT_ALLOWED_SERVICES`
 - ce client bootstrap doit rester sous secret manager et etre remplace progressivement par des client applications dediees
 
 ## Administration generale

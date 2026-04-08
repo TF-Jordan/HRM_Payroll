@@ -55,13 +55,23 @@ public class ThirdPartyR2dbcRepositoryAdapter implements ThirdPartyRepository {
     }
 
     @Override
-    public Mono<ThirdParty> save(ThirdParty thirdParty) {
-        ThirdPartyEntity entity = new ThirdPartyEntity(thirdParty.id(), thirdParty.tenantId(), thirdParty.createdAt(),
-                thirdParty.updatedAt(), thirdParty.organizationId(), thirdParty.partyRef().partyType().name(),
-                thirdParty.partyRef().partyId(), thirdParty.referenceCode(), thirdParty.displayName(), thirdParty.roles(),
-                thirdParty.prospect(), thirdParty.accountingAccount(), thirdParty.segment(),
-                thirdParty.qualificationScore(), thirdParty.lastContactedAt(), thirdParty.nextFollowUpAt(),
-                thirdParty.followUpStatus(), thirdParty.active(), thirdParty.convertedAt());
+    public Mono<ThirdParty> save(ThirdParty tp) {
+        ThirdPartyEntity entity = new ThirdPartyEntity(
+                tp.id(), tp.tenantId(), tp.createdAt(), tp.updatedAt(),
+                tp.organizationId(), tp.partyRef().partyType().name(), tp.partyRef().partyId(),
+                tp.code(), tp.referenceCode(), tp.displayName(), tp.roles(), tp.prospect(),
+                tp.accountingAccount(), tp.segment(), tp.qualificationScore(),
+                tp.lastContactedAt(), tp.nextFollowUpAt(), tp.followUpStatus(),
+                tp.active(), tp.convertedAt(),
+                // canonical fields
+                tp.type(), tp.legalForm(), tp.uniqueIdentificationNumber(), tp.tradeRegistrationNumber(),
+                tp.name(), tp.acronym(), tp.longName(), tp.logoUri(), tp.logoId(),
+                tp.accountingAccountNumbers(), tp.authorizedPaymentMethods(),
+                tp.authorizedCreditLimit(), tp.maxDiscountRate(), tp.vatSubject(),
+                tp.operationsBalance(), tp.openingBalance(), tp.payTermNumber(), tp.payTermType(),
+                tp.thirdPartyFamily(), tp.classification(), tp.taxNumber(),
+                tp.loyaltyPoints(), tp.loyaltyPointsUsed(), tp.loyaltyPointsExpired(),
+                tp.enabled(), tp.deletedAt());
         return repository.save(entity).map(this::toDomain);
     }
 
@@ -70,11 +80,29 @@ public class ThirdPartyR2dbcRepositoryAdapter implements ThirdPartyRepository {
         return repository.findByIdAndTenantId(thirdPartyId, tenantId).flatMap(repository::delete).then();
     }
 
-    private ThirdParty toDomain(ThirdPartyEntity entity) {
-        return ThirdParty.rehydrate(entity.id(), entity.tenantId(), entity.createdAt(), entity.updatedAt(),
-                entity.organizationId(), new PartyRef(PartyType.valueOf(entity.partyType()), entity.partyId()),
-                entity.referenceCode(), entity.displayName(), entity.roles(), entity.prospect(),
-                entity.accountingAccount(), entity.segment(), entity.qualificationScore(), entity.active(),
-                entity.lastContactedAt(), entity.nextFollowUpAt(), entity.followUpStatus(), entity.convertedAt());
+    private ThirdParty toDomain(ThirdPartyEntity e) {
+        return ThirdParty.rehydrate(
+                e.id(), e.tenantId(), e.createdAt(), e.updatedAt(),
+                e.organizationId(), new PartyRef(PartyType.valueOf(e.partyType()), e.partyId()),
+                firstNonBlank(e.code(), e.referenceCode()), firstNonBlank(e.name(), e.displayName()),
+                e.roles(), e.prospect(), e.accountingAccount(), e.segment(), e.qualificationScore(),
+                e.enabled(),
+                e.lastContactedAt(), e.nextFollowUpAt(), e.followUpStatus(), e.convertedAt(),
+                // canonical fields
+                e.type(), e.legalForm(), e.uniqueIdentificationNumber(), e.tradeRegistrationNumber(),
+                e.name(), e.acronym(), e.longName(), e.logoUri(), e.logoId(),
+                e.accountingAccountNumbers(), e.authorizedPaymentMethods(),
+                e.authorizedCreditLimit(), e.maxDiscountRate(), e.vatSubject(),
+                e.operationsBalance(), e.openingBalance(), e.payTermNumber(), e.payTermType(),
+                e.thirdPartyFamily(), e.classification(), e.taxNumber(),
+                e.loyaltyPoints(), e.loyaltyPointsUsed(), e.loyaltyPointsExpired(),
+                e.deletedAt());
+    }
+
+    private String firstNonBlank(String primary, String fallback) {
+        if (primary != null && !primary.isBlank()) {
+            return primary;
+        }
+        return fallback;
     }
 }

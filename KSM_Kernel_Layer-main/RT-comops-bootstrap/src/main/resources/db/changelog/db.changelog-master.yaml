@@ -66,3 +66,15 @@ databaseChangeLog:
   - include:
       file: releases/022-organization-service-subscriptions.yaml
       relativeToChangelogFile: true
+  - include:
+      file: releases/023-client-application-service-restrictions.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: releases/024-organization-service-request-quotas.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: releases/025-canonical-schema-alignment.yaml
+      relativeToChangelogFile: true
+  - include:
+      file: releases/026-canonical-secondary-entities.yaml
+      relativeToChangelogFile: true

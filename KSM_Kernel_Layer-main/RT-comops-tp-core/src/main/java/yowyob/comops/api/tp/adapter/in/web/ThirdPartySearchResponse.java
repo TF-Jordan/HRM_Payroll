@@ -11,19 +11,25 @@ public record ThirdPartySearchResponse(
         UUID organizationId,
         PartyType partyType,
         UUID partyId,
-        String referenceCode,
-        String displayName,
+        String code,
+        String name,
+        String type,
+        String longName,
         Set<String> roles,
         boolean prospect,
         String segment,
         Integer qualificationScore,
-        boolean active,
-        String followUpStatus) {
+        boolean enabled,
+        String followUpStatus,
+        String referenceCode,
+        String displayName,
+        boolean active) {
 
     public static ThirdPartySearchResponse from(ThirdPartySearchResult result) {
         return new ThirdPartySearchResponse(result.id(), result.tenantId(), result.organizationId(),
-                result.partyType(), result.partyId(), result.referenceCode(), result.displayName(), result.roles(),
-                result.prospect(), result.segment(), result.qualificationScore(), result.active(),
-                result.followUpStatus());
+                result.partyType(), result.partyId(), result.code(), result.name(), result.type(),
+                result.longName(), result.roles(), result.prospect(), result.segment(),
+                result.qualificationScore(), result.enabled(), result.followUpStatus(),
+                result.referenceCode(), result.displayName(), result.active());
     }
 }

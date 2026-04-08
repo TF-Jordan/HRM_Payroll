@@ -121,6 +121,8 @@ Une base d exemple est disponible dans [.env.local.example](/home/blhack/Projets
 - le gateway applique maintenant:
   - un rate limiting par IP
   - un rate limiting par tenant
-- le backend peut appliquer en plus un quota par tenant via Redis
+- le backend peut appliquer en plus:
+  - un quota plateforme par `tenant + client + service` via Redis
+  - un quota metier par `organization + service` via Redis
 - en mode `docker-compose.application.yml`, Prometheus scrape directement `iwm-app:8081`
 - le script de verification locale est [scripts/smoke-observability.sh](/home/blhack/Projets/Kernel-core/iwm-backend/scripts/smoke-observability.sh)

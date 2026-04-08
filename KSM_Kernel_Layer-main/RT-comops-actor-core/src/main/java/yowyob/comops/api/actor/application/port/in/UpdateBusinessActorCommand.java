@@ -1,10 +1,22 @@
 package yowyob.comops.api.actor.application.port.in;
 
+import java.util.Set;
 import java.util.UUID;
 
 public record UpdateBusinessActorCommand(
         UUID tenantId,
         UUID userId,
+        String code,
+        boolean isIndividual,
+        boolean isAvailable,
+        boolean isVerified,
+        boolean isActive,
+        String type,
+        String role,
+        Set<String> qualifications,
+        Set<String> paymentMethods,
+        Set<UUID> addresses,
+        String biography,
         String name,
         String businessId,
         String niu,

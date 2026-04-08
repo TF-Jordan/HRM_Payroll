@@ -6,5 +6,6 @@ import java.util.UUID;
 public record OrganizationServiceEntitlements(
         UUID organizationId,
         List<String> subscribedServices,
-        List<String> effectiveServices) {
+        List<String> effectiveServices,
+        List<OrganizationServiceQuota> serviceQuotas) {
 }

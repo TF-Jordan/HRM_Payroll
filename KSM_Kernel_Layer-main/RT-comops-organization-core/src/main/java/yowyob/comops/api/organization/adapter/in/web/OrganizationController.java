@@ -67,9 +67,26 @@ public class OrganizationController {
                         tuple.getT2().tenantId(),
                         tuple.getT1().businessActorId(),
                         tuple.getT1().code(),
-                        tuple.getT1().legalName(),
-                        tuple.getT1().displayName(),
-                        tuple.getT1().organizationType())))
+                        tuple.getT1().service(),
+                        tuple.getT1().resolvedIndividualBusiness(),
+                        tuple.getT1().email(),
+                        tuple.getT1().shortName(),
+                        tuple.getT1().longName(),
+                        tuple.getT1().description(),
+                        tuple.getT1().logoUri(),
+                        tuple.getT1().logoId(),
+                        tuple.getT1().websiteUrl(),
+                        tuple.getT1().socialNetwork(),
+                        tuple.getT1().businessRegistrationNumber(),
+                        tuple.getT1().taxNumber(),
+                        tuple.getT1().capitalShare(),
+                        tuple.getT1().ceoName(),
+                        tuple.getT1().yearFounded(),
+                        tuple.getT1().keywords(),
+                        tuple.getT1().numberOfEmployees(),
+                        tuple.getT1().legalForm(),
+                        tuple.getT1().resolvedActive(),
+                        tuple.getT1().status())))
                 .map(OrganizationResponse::from)
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
                         .body(ApiResponse.success(response, "Organization created.")));
@@ -117,9 +134,26 @@ public class OrganizationController {
                                 organizationId,
                                 owned.businessActorId(),
                                 tuple.getT1().code(),
-                                tuple.getT1().legalName(),
-                                tuple.getT1().displayName(),
-                                tuple.getT1().organizationType()))))
+                                tuple.getT1().service(),
+                                tuple.getT1().resolvedIndividualBusiness(),
+                                tuple.getT1().email(),
+                                tuple.getT1().shortName(),
+                                tuple.getT1().longName(),
+                                tuple.getT1().description(),
+                                tuple.getT1().logoUri(),
+                                tuple.getT1().logoId(),
+                                tuple.getT1().websiteUrl(),
+                                tuple.getT1().socialNetwork(),
+                                tuple.getT1().businessRegistrationNumber(),
+                                tuple.getT1().taxNumber(),
+                                tuple.getT1().capitalShare(),
+                                tuple.getT1().ceoName(),
+                                tuple.getT1().yearFounded(),
+                                tuple.getT1().keywords(),
+                                tuple.getT1().numberOfEmployees(),
+                                tuple.getT1().legalForm(),
+                                tuple.getT1().resolvedActive(),
+                                tuple.getT1().status()))))
                 .map(OrganizationResponse::from)
                 .map(response -> ResponseEntity.ok(ApiResponse.success(response, "Organization updated.")));
     }

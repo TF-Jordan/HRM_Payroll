@@ -45,7 +45,7 @@ public final class ApiKeyReactiveAuthenticationManager implements ReactiveAuthen
         if (token.tenantId() == null || token.userId() == null) {
             return Mono.just(ApiKeyAuthenticationToken.authenticated(clientApplication.id(), clientApplication.clientId(),
                     providedApiKey, token.tenantId(), token.organizationId(), token.agencyId(), token.userId(),
-                    token.actorId(), java.util.List.of()));
+                    token.actorId(), clientApplication.allowedServiceCodes(), java.util.List.of()));
         }
         return permissionResolver.resolvePermissions(token.tenantId(), token.userId())
                 .map(permissions -> permissions.stream()
@@ -53,6 +53,7 @@ public final class ApiKeyReactiveAuthenticationManager implements ReactiveAuthen
                         .collect(Collectors.toSet()))
                 .map(authorities -> ApiKeyAuthenticationToken.authenticated(clientApplication.id(),
                         clientApplication.clientId(), providedApiKey, token.tenantId(), token.organizationId(),
-                        token.agencyId(), token.userId(), token.actorId(), authorities));
+                        token.agencyId(), token.userId(), token.actorId(), clientApplication.allowedServiceCodes(),
+                        authorities));
     }
 }

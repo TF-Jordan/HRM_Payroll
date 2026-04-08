@@ -30,10 +30,12 @@ import reactor.core.publisher.Mono;
 public class TenantRequestQuotaWebFilter implements WebFilter {
 
     private static final String TENANT_HEADER = "X-Tenant-Id";
+    private static final String CLIENT_ID_HEADER = "X-Client-Id";
 
     private final ReactiveStringRedisTemplate redisTemplate;
     private final TenantRequestQuotaProperties properties;
     private final ObjectMapper objectMapper;
+    private final PlatformServiceRouteResolver routeResolver;
     private final Counter allowedCounter;
     private final Counter rejectedCounter;
     private final Counter failOpenCounter;
@@ -45,6 +47,7 @@ public class TenantRequestQuotaWebFilter implements WebFilter {
         this.redisTemplate = redisTemplate;
         this.properties = properties;
         this.objectMapper = objectMapper;
+        this.routeResolver = new PlatformServiceRouteResolver();
         this.allowedCounter = Counter.builder("iwm.quotas.tenant_requests.allowed")
                 .description("Number of tenant-scoped requests accepted by the backend quota filter")
                 .register(meterRegistry);
@@ -62,24 +65,34 @@ public class TenantRequestQuotaWebFilter implements WebFilter {
         if (!path.startsWith("/api/")) {
             return chain.filter(exchange);
         }
-        return resolveTenantId(exchange)
-                .flatMap(tenantId -> enforceQuota(exchange, chain, tenantId))
-                .switchIfEmpty(chain.filter(exchange));
+        String serviceCode = resolveServiceCode(path);
+        return resolveQuotaContext(exchange, serviceCode)
+                .flatMap(context -> enforceQuota(exchange, chain, context).thenReturn(Boolean.TRUE))
+                .switchIfEmpty(Mono.defer(() -> chain.filter(exchange).thenReturn(Boolean.TRUE)))
+                .then();
     }
 
-    private Mono<UUID> resolveTenantId(ServerWebExchange exchange) {
+    private Mono<QuotaContext> resolveQuotaContext(ServerWebExchange exchange, String serviceCode) {
         return ReactiveSecurityContextHolder.getContext()
                 .mapNotNull(securityContext -> securityContext.getAuthentication())
-                .cast(Authentication.class)
-                .mapNotNull(authentication -> authentication instanceof ApiKeyAuthenticationToken token ? token.tenantId() : null)
-                .switchIfEmpty(Mono.justOrEmpty(exchange.getRequest().getHeaders().getFirst(TENANT_HEADER))
-                        .flatMap(this::parseUuid));
+                .mapNotNull(authentication -> authentication instanceof ApiKeyAuthenticationToken token
+                        ? new QuotaContext(token.tenantId(), token.clientId(), normalizeServiceCode(serviceCode))
+                        : null)
+                .filter(context -> context.tenantId() != null && context.clientId() != null && !context.clientId().isBlank())
+                .switchIfEmpty(Mono.defer(() -> Mono.justOrEmpty(exchange.getRequest().getHeaders().getFirst(TENANT_HEADER))
+                        .flatMap(this::parseUuid)
+                        .zipWith(Mono.justOrEmpty(exchange.getRequest().getHeaders().getFirst(CLIENT_ID_HEADER)))
+                        .map(tuple -> new QuotaContext(tuple.getT1(), tuple.getT2().trim(), normalizeServiceCode(serviceCode)))));
     }
 
-    private Mono<Void> enforceQuota(ServerWebExchange exchange, WebFilterChain chain, UUID tenantId) {
+    private Mono<Void> enforceQuota(ServerWebExchange exchange, WebFilterChain chain, QuotaContext context) {
         long windowSeconds = Math.max(1L, properties.getWindow().toSeconds());
         long bucket = Instant.now().getEpochSecond() / windowSeconds;
-        String key = properties.getKeyPrefix() + ":" + tenantId + ":" + bucket;
+        String key = properties.getKeyPrefix()
+                + ":" + context.tenantId()
+                + ":" + context.clientId().toLowerCase(java.util.Locale.ROOT)
+                + ":" + context.serviceCode()
+                + ":" + bucket;
         Duration ttl = properties.getWindow().plusSeconds(5);
 
         return redisTemplate.opsForValue().increment(key)
@@ -94,6 +107,9 @@ public class TenantRequestQuotaWebFilter implements WebFilter {
                         headers.set("X-IWM-Quota-Limit", Long.toString(properties.getLimit()));
                         headers.set("X-IWM-Quota-Remaining", Long.toString(remaining));
                         headers.set("X-IWM-Quota-Window-Seconds", Long.toString(windowSeconds));
+                        headers.set("X-IWM-Quota-Scope", "tenant-client-service");
+                        headers.set("X-IWM-Quota-Client-Id", context.clientId());
+                        headers.set("X-IWM-Quota-Service", context.serviceCode());
                         if (count > properties.getLimit()) {
                             rejectedCounter.increment();
                             headers.set("Retry-After", Long.toString(windowSeconds));
@@ -136,5 +152,20 @@ public class TenantRequestQuotaWebFilter implements WebFilter {
         } catch (IllegalArgumentException exception) {
             return Mono.empty();
         }
+    }
+
+    private String resolveServiceCode(String path) {
+        String mappedCode = routeResolver.resolveClientApplicationServiceCode(path);
+        return mappedCode == null ? properties.getCoreServiceCode() : mappedCode;
+    }
+
+    private String normalizeServiceCode(String serviceCode) {
+        if (serviceCode == null || serviceCode.isBlank()) {
+            return properties.getCoreServiceCode();
+        }
+        return serviceCode.trim().replace('-', '_').replace(' ', '_').toUpperCase(java.util.Locale.ROOT);
+    }
+
+    private record QuotaContext(UUID tenantId, String clientId, String serviceCode) {
     }
 }

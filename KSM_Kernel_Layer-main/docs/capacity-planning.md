@@ -174,10 +174,12 @@ Mesures consolidees :
   - limite par IP
   - limite par tenant
 - backend
-  - quota par tenant base Redis
+  - quota plateforme par `tenant + client application + service`
+  - quota metier par `organization + service`
 - point de depart:
   - gateway tenant rate: `120r/s` local, `180r/s` preprod, `300r/s` prod initial
   - backend quota tenant: `1200/min` local, `1800/min` preprod, `2400/min` prod initial
+  - backend quota organisation service par defaut: `10000/min`
 - lecture issue des mesures:
   - avec les limites actuelles, `spike` et `saturation` plafonnent par throttling avant effondrement de latence
   - c'est un bon comportement de protection
@@ -188,10 +190,13 @@ Mesures consolidees :
 1. Garder `app=2` seulement pour validation locale et tests de base.
 2. Passer a `app=3` minimum pour les environnements ou l'on veut valider les redemarrages sans erreur transitoire visible.
 3. Conserver les quotas actuels tant que le besoin metier n'exige pas de burst plus fort.
-4. Si le besoin impose plus de debit:
-   - augmenter d'abord les limites `tenant/IP`
-   - puis relancer `spike` et `saturation`
-   - ensuite seulement revoir pool DB, replicas et partitions Kafka.
+4. Ajuster les quotas `organization + service` selon les offres et le fair-use attendus.
+5. Si le besoin impose plus de debit:
+  - augmenter d'abord les limites `tenant/IP`
+  - puis revoir les quotas `tenant + client + service`
+  - puis revoir les quotas `organization + service`
+  - puis relancer `spike` et `saturation`
+  - ensuite seulement revoir pool DB, replicas et partitions Kafka.
 
 ## Comment ajuster
 

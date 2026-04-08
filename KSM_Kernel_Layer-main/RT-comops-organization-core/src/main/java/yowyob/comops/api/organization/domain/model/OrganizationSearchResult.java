@@ -7,7 +7,22 @@ public record OrganizationSearchResult(
         UUID tenantId,
         UUID businessActorId,
         String code,
-        String legalName,
-        String displayName,
-        String organizationType) {
+        String service,
+        String shortName,
+        String longName,
+        String legalForm,
+        boolean isActive,
+        String status) {
+
+    public String legalName() {
+        return longName;
+    }
+
+    public String displayName() {
+        return shortName;
+    }
+
+    public String organizationType() {
+        return service;
+    }
 }

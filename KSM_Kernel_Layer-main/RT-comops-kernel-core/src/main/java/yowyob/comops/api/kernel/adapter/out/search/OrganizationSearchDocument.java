@@ -12,7 +12,10 @@ public record OrganizationSearchDocument(
         @Field(type = FieldType.Keyword) UUID tenantId,
         @Field(type = FieldType.Keyword) UUID businessActorId,
         @Field(type = FieldType.Keyword) String code,
-        @Field(type = FieldType.Text) String legalName,
-        @Field(type = FieldType.Text) String displayName,
-        @Field(type = FieldType.Keyword) String organizationType) {
+        @Field(type = FieldType.Keyword) String service,
+        @Field(type = FieldType.Text) String shortName,
+        @Field(type = FieldType.Text) String longName,
+        @Field(type = FieldType.Keyword) String legalForm,
+        @Field(type = FieldType.Boolean) boolean isActive,
+        @Field(type = FieldType.Keyword) String status) {
 }

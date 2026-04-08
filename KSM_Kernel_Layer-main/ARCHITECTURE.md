@@ -104,9 +104,19 @@
 - les tests PostgreSQL reels sont gardes explicites et activables a la demande
 - les suites de contrat utilisent des changelogs Liquibase dedies avec nettoyage reseeding deterministe
 - les integrations cross-module passent par des ports applicatifs et des evenements d outbox, pas par des dependances metier cachees
-- `organization-core` porte maintenant aussi le catalogue de services plateforme et les abonnements de services par organisation
+- `common-core` porte maintenant le catalogue partage `PlatformServiceCode`, consomme a la fois par `kernel-core` et `organization-core`
+- `organization-core` porte maintenant les abonnements de services par organisation
+- `organization-core` porte aussi le quota par abonnement de service (`requestQuotaLimit`, `requestQuotaWindowSeconds`)
 - `auth-core` projette ces abonnements dans `login` et `users/me` sous la forme `organizations[].services`
-- `kernel-core` applique un filtre d entitlement sur les prefixes metier scopes organisation:
+- `kernel-core` applique maintenant l ordre de controle suivant sur `/api/**`:
+- authentification `ClientApplication` + JWT eventuel
+- filtre `ClientApplication -> service` sur les prefixes routes connus
+- quota backend Redis sur `(tenantId, clientId, serviceCode, bucket)`
+- filtre `Organization -> service` sur les seuls modules abonables scopes organisation
+- quota metier Redis sur `(tenantId, organizationId, serviceCode, bucket)` a partir de l'abonnement de service
+- politiques et permissions utilisateur au bon scope
+- le filtre `ClientApplication -> service` retourne `CLIENT_APPLICATION_SERVICE_NOT_ALLOWED`
+- `kernel-core` applique ensuite un filtre d entitlement organisationnel sur les prefixes metier scopes organisation:
 - `COMMERCIAL` -> `clients/customers/suppliers/prospects/sales-agents/third-parties`
 - `PRODUCT` -> `products`
 - `INVENTORY` -> `inventory/inventories`
@@ -116,6 +126,10 @@
 - `RESOURCE` -> `resources`
 - les endpoints ainsi proteges exigent `X-Organization-Id`; l'absence de header retourne `ORGANIZATION_CONTEXT_REQUIRED`
 - une organisation non abonnee au service requis recoit `ORGANIZATION_SERVICE_NOT_SUBSCRIBED`
+- une organisation qui depasse son quota de service recoit `ORGANIZATION_SERVICE_QUOTA_EXCEEDED`
+- les routes `ORGANIZATION` et `SETTINGS` sont bornees par la `ClientApplication`, mais ne sont pas soumises au filtre d abonnement organisationnel
+- le quota backend Redis est maintenant calcule sur `(tenantId, clientId, serviceCode, bucket)` et expose les headers `X-IWM-Quota-*`
+- le quota metier Redis est maintenant calcule sur `(tenantId, organizationId, serviceCode, bucket)` et expose les headers `X-IWM-Organization-Quota-*`
 - les permissions peuvent etre cachees dans Redis sans sortir la source de verite des roles de PostgreSQL
 - `auth-core` couvre maintenant aussi le self-service utilisateur (`users/me`, plan, onboarding)
 - `kernel-core` porte un audit systeme consultable, distinct de l audit admin

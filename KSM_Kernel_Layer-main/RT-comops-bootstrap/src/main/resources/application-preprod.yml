@@ -15,6 +15,14 @@ iwm:
       enabled: ${IWM_TENANT_REQUEST_QUOTA_ENABLED:true}
       limit: ${IWM_TENANT_REQUEST_QUOTA_LIMIT:1800}
       window: ${IWM_TENANT_REQUEST_QUOTA_WINDOW:1m}
+      core-service-code: ${IWM_TENANT_REQUEST_QUOTA_CORE_SERVICE_CODE:CORE}
+    organization-service-requests:
+      enabled: ${IWM_ORGANIZATION_SERVICE_REQUEST_QUOTA_ENABLED:true}
+      fail-open: ${IWM_ORGANIZATION_SERVICE_REQUEST_QUOTA_FAIL_OPEN:true}
+  organization:
+    service-subscriptions:
+      default-request-quota-limit: ${IWM_ORGANIZATION_SERVICE_DEFAULT_REQUEST_QUOTA_LIMIT:10000}
+      default-request-quota-window: ${IWM_ORGANIZATION_SERVICE_DEFAULT_REQUEST_QUOTA_WINDOW:1m}
   redis:
     permission-cache:
       enabled: true

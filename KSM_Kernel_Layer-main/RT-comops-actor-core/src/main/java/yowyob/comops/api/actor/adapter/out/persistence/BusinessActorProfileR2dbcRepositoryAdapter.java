@@ -39,18 +39,23 @@ public class BusinessActorProfileR2dbcRepositoryAdapter implements BusinessActor
     }
 
     private BusinessActorProfileEntity toEntity(BusinessActorProfile profile) {
-        return new BusinessActorProfileEntity(profile.id(), profile.tenantId(), profile.createdAt(), profile.updatedAt(),
-                profile.actorId(), profile.governanceStatus().name(), profile.governedByUserId(), profile.governedAt(),
-                profile.governanceReason(), profile.name(), profile.businessId(), profile.niu(),
-                profile.tradeRegistryNumber(), profile.website(), profile.contactPhone(), profile.privateAddress(),
-                profile.businessAddress(), profile.businessProfile());
+        return new BusinessActorProfileEntity(profile.id(), profile.tenantId(), profile.createdAt(),
+                profile.updatedAt(), profile.actorId(), profile.governanceStatus().name(),
+                profile.governedByUserId(), profile.governedAt(), profile.governanceReason(), profile.code(),
+                profile.isIndividual(), profile.isAvailable(), profile.isVerified(), profile.isActive(),
+                profile.type(), profile.role(), profile.qualifications(), profile.paymentMethods(),
+                profile.addresses(), profile.biography(), profile.deletedAt(), profile.name(), profile.businessId(),
+                profile.niu(), profile.tradeRegistryNumber(), profile.website(), profile.contactPhone(),
+                profile.privateAddress(), profile.businessAddress(), profile.businessProfile());
     }
 
     private BusinessActorProfile toDomain(BusinessActorProfileEntity entity) {
         return BusinessActorProfile.rehydrate(entity.id(), entity.tenantId(), entity.createdAt(), entity.updatedAt(),
                 entity.actorId(), entity.governanceStatus(), entity.governedByUserId(), entity.governedAt(),
-                entity.governanceReason(), entity.name(), entity.businessId(), entity.niu(),
-                entity.tradeRegistryNumber(), entity.website(), entity.contactPhone(), entity.privateAddress(),
-                entity.businessAddress(), entity.businessProfile());
+                entity.governanceReason(), entity.code(), entity.isIndividual(), entity.isAvailable(),
+                entity.isVerified(), entity.isActive(), entity.type(), entity.role(), entity.qualifications(),
+                entity.paymentMethods(), entity.addresses(), entity.biography(), entity.deletedAt(), entity.name(),
+                entity.businessId(), entity.niu(), entity.tradeRegistryNumber(), entity.website(),
+                entity.contactPhone(), entity.privateAddress(), entity.businessAddress(), entity.businessProfile());
     }
 }

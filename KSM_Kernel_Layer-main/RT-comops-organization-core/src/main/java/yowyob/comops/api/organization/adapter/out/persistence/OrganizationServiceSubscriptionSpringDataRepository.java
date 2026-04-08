@@ -10,6 +10,9 @@ public interface OrganizationServiceSubscriptionSpringDataRepository
 
     Mono<Boolean> existsByTenantIdAndOrganizationIdAndServiceCode(UUID tenantId, UUID organizationId, String serviceCode);
 
+    Mono<OrganizationServiceSubscriptionEntity> findByTenantIdAndOrganizationIdAndServiceCode(UUID tenantId,
+            UUID organizationId, String serviceCode);
+
     Flux<OrganizationServiceSubscriptionEntity> findAllByTenantIdAndOrganizationId(UUID tenantId, UUID organizationId);
 
     Mono<Void> deleteByTenantIdAndOrganizationIdAndServiceCode(UUID tenantId, UUID organizationId, String serviceCode);

@@ -5,5 +5,6 @@ public record RegisterClientApplicationCommand(
         String name,
         String description,
         String clientSecret,
+        java.util.List<String> allowedServices,
         boolean systemManaged) {
 }

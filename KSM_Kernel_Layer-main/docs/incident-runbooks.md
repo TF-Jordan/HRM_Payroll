@@ -10,11 +10,35 @@ Verification:
 1. Nginx rate limiting par IP et par tenant
 2. metrique `iwm_quotas_tenant_requests_rejected_total`
 3. distribution des tenants affectes
+4. `X-IWM-Quota-Client-Id`
+5. `X-IWM-Quota-Service`
 
 Actions:
 1. identifier si le tenant est legitime ou abusif
-2. augmenter temporairement le quota si besoin metier reel
-3. sinon maintenir le plafond et ouvrir un canal avec le client concerne
+2. identifier le backend consommateur concerne
+3. identifier le service concerne (`SALES`, `COMMERCIAL`, etc.)
+4. augmenter temporairement le quota si besoin metier reel
+5. sinon maintenir le plafond et ouvrir un canal avec le client concerne
+
+## 1.b Quota organisationnel / 429
+
+Symptomes:
+- hausse des `429` sur une organisation precise
+- headers `X-IWM-Organization-Quota-*` presents
+- metrique `iwm_quotas_organization_service_requests_rejected_total` en hausse
+
+Verification:
+1. `X-IWM-Organization-Quota-Organization-Id`
+2. `X-IWM-Organization-Quota-Service`
+3. `X-IWM-Organization-Quota-Limit`
+4. `X-IWM-Organization-Quota-Window-Seconds`
+5. verifier la configuration metier de l'abonnement organisationnel
+
+Actions:
+1. verifier que l'organisation est bien abonnee au service concerne
+2. verifier si le volume est conforme a son offre commerciale
+3. augmenter temporairement le quota si le besoin metier est legitime
+4. sinon maintenir le plafond et ouvrir un arbitrage produit/licensing
 
 ## 2. Backlog outbox
 

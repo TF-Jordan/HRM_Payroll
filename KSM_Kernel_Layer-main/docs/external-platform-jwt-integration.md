@@ -63,11 +63,21 @@ Si l'appel est scope organisation ou agence:
 - `X-Agency-Id: <agency-id>`
 
 Pour les endpoints metier scopes organisation:
+- la `ClientApplication` doit deja etre autorisee sur le service porte par la route
+- le quota backend `tenant + client + service` doit laisser passer l'appel
 - `X-Organization-Id` est obligatoire
 - l'organisation doit etre abonnee au service requis
+- le quota `organization + service` de cette organisation doit laisser passer l'appel
 - sinon le kernel retourne:
+  - `403 CLIENT_APPLICATION_SERVICE_NOT_ALLOWED`
+  - `429 TENANT_REQUEST_QUOTA_EXCEEDED`
   - `400 ORGANIZATION_CONTEXT_REQUIRED`
   - ou `403 ORGANIZATION_SERVICE_NOT_SUBSCRIBED`
+  - ou `429 ORGANIZATION_SERVICE_QUOTA_EXCEEDED`
+
+Pour les routes `ORGANIZATION` et `SETTINGS`:
+- la `ClientApplication` doit etre autorisee sur `ORGANIZATION` ou `SETTINGS`
+- le filtre d abonnement organisationnel ne s applique pas
 
 ## 3. Verifier le JWT cote plateforme consommatrice
 
@@ -97,7 +107,9 @@ Claims utiles:
 - toujours envoyer `X-Client-Id`
 - toujours envoyer `X-Api-Key`
 - utiliser `Authorization: Bearer <accessToken>`
+- verifier que la `ClientApplication` utilisee par la plateforme est autorisee sur les services qu elle appelle
 - utiliser `organizations[].services` pour decider quels modules l'organisation consomme
+- utiliser `serviceQuotas` et les headers `X-IWM-Organization-Quota-*` pour observer le fair-use par organisation
 - verifier `iss`, `exp`, `aud` et la signature `RS256`
 - utiliser `/.well-known/jwks.json` pour la verification distante
 

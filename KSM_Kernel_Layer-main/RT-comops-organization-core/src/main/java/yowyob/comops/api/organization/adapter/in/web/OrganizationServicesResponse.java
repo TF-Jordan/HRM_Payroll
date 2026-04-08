@@ -7,10 +7,12 @@ import java.util.UUID;
 public record OrganizationServicesResponse(
         UUID organizationId,
         List<String> subscribedServices,
-        List<String> effectiveServices) {
+        List<String> effectiveServices,
+        List<OrganizationServiceQuotaResponse> serviceQuotas) {
 
     public static OrganizationServicesResponse from(OrganizationServiceEntitlements entitlements) {
         return new OrganizationServicesResponse(entitlements.organizationId(), entitlements.subscribedServices(),
-                entitlements.effectiveServices());
+                entitlements.effectiveServices(),
+                entitlements.serviceQuotas().stream().map(OrganizationServiceQuotaResponse::from).toList());
     }
 }

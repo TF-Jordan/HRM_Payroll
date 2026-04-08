@@ -62,7 +62,14 @@ public class WarehouseController {
                         tuple.getT2().tenantId(),
                         requireOrganization(tuple.getT2().organizationId()),
                         tuple.getT1().code(),
+                        null, null,
                         tuple.getT1().name(),
+                        null, null, false, true,
+                        null, null, null, null, false, false,
+                        null, null, null, null,
+                        null, null, null, null, null, null,
+                        null, null, null, null, null, null,
+                        false, true, null,
                         WAREHOUSE_TYPE)))
                 .map(AgencyResponse::from)
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
@@ -77,7 +84,14 @@ public class WarehouseController {
                         tuple.getT2().tenantId(),
                         warehouseId,
                         tuple.getT1().code(),
+                        null, null,
                         tuple.getT1().name(),
+                        null, null, false, true,
+                        null, null, null, null, false, false,
+                        null, null, null, null,
+                        null, null, null, null, null, null,
+                        null, null, null, null, null, null,
+                        false, true, null,
                         WAREHOUSE_TYPE)))
                 .filter(agency -> WAREHOUSE_TYPE.equals(agency.agencyType()))
                 .map(AgencyResponse::from)

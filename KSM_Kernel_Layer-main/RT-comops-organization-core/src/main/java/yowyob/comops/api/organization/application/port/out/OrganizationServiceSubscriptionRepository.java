@@ -9,6 +9,9 @@ public interface OrganizationServiceSubscriptionRepository {
 
     Mono<Boolean> existsByOrganizationAndServiceCode(UUID tenantId, UUID organizationId, String serviceCode);
 
+    Mono<OrganizationServiceSubscription> findByOrganizationAndServiceCode(UUID tenantId, UUID organizationId,
+            String serviceCode);
+
     Flux<OrganizationServiceSubscription> findByOrganizationId(UUID tenantId, UUID organizationId);
 
     Mono<OrganizationServiceSubscription> save(OrganizationServiceSubscription subscription);

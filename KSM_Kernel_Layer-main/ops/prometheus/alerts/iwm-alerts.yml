@@ -71,4 +71,13 @@ groups:
           severity: warning
         annotations:
           summary: "IWM tenant quota is rejecting traffic"
-          description: "Le quota backend par tenant rejette des requetes depuis plus de 5 minutes."
+          description: "Le quota backend par tenant, client applicatif et service rejette des requetes depuis plus de 5 minutes."
+
+      - alert: IwmOrganizationServiceQuotaRejectingTraffic
+        expr: increase(iwm_quotas_organization_service_requests_rejected_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "IWM organization service quota is rejecting traffic"
+          description: "Le quota metier par organisation et service rejette des requetes depuis plus de 5 minutes."

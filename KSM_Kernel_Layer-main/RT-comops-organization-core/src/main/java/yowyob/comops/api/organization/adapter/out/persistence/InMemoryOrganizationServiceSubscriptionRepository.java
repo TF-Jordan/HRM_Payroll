@@ -25,6 +25,16 @@ public class InMemoryOrganizationServiceSubscriptionRepository implements Organi
     }
 
     @Override
+    public Mono<OrganizationServiceSubscription> findByOrganizationAndServiceCode(UUID tenantId, UUID organizationId,
+            String serviceCode) {
+        return Mono.justOrEmpty(subscriptions.values().stream()
+                .filter(subscription -> subscription.tenantId().equals(tenantId))
+                .filter(subscription -> subscription.organizationId().equals(organizationId))
+                .filter(subscription -> subscription.serviceCode().equals(serviceCode))
+                .findFirst());
+    }
+
+    @Override
     public Flux<OrganizationServiceSubscription> findByOrganizationId(UUID tenantId, UUID organizationId) {
         return Flux.fromStream(subscriptions.values().stream()
                 .filter(subscription -> subscription.tenantId().equals(tenantId))

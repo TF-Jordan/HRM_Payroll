@@ -1,5 +1,6 @@
 package yowyob.comops.api.common.domain.model;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -10,11 +11,20 @@ public record Contact(
         UUID contactableId,
         String firstName,
         String lastName,
-        String phoneNumber,
-        String email,
+        String title,
         boolean isEmailVerified,
         boolean isPhoneNumberVerified,
-        boolean isFavorite) {
+        boolean isFavorite,
+        String phoneNumber,
+        String secondaryPhoneNumber,
+        String faxNumber,
+        String email,
+        String secondaryEmail,
+        Instant emailVerifiedAt,
+        Instant phoneVerifiedAt,
+        Instant createdAt,
+        Instant updatedAt,
+        Instant deletedAt) {
 
     public Contact {
         Objects.requireNonNull(id, "id is required");

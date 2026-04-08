@@ -53,15 +53,23 @@ public class ActorController {
                 .zipWith(ReactiveRequestContextHolder.getRequiredContext())
                 .flatMap(tuple -> createActorUseCase.createActor(new CreateActorCommand(
                         tuple.getT2().tenantId(),
+                        tuple.getT1().organizationId(),
                         tuple.getT1().firstName(),
                         tuple.getT1().lastName(),
+                        tuple.getT1().name(),
                         tuple.getT1().phoneNumber(),
                         tuple.getT1().email(),
+                        tuple.getT1().description(),
+                        tuple.getT1().type(),
                         tuple.getT1().gender(),
+                        tuple.getT1().photoUri(),
+                        tuple.getT1().photoId(),
                         tuple.getT1().nationality(),
                         tuple.getT1().birthDate(),
                         tuple.getT1().profession(),
-                        tuple.getT1().biography())))
+                        tuple.getT1().biography(),
+                        tuple.getT1().addresses(),
+                        tuple.getT1().contacts())))
                 .map(ActorResponse::from)
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
                         .body(ApiResponse.success(response, "Actor created.")));
@@ -75,6 +83,17 @@ public class ActorController {
                 .flatMap(tuple -> onboardBusinessActorUseCase.onboard(new OnboardBusinessActorCommand(
                         tuple.getT2().tenantId(),
                         tuple.getT2().userId(),
+                        tuple.getT1().code(),
+                        tuple.getT1().resolvedIndividual(),
+                        tuple.getT1().resolvedAvailable(),
+                        tuple.getT1().resolvedVerified(),
+                        tuple.getT1().resolvedActive(),
+                        tuple.getT1().type(),
+                        tuple.getT1().role(),
+                        tuple.getT1().qualifications(),
+                        tuple.getT1().paymentMethods(),
+                        tuple.getT1().addresses(),
+                        tuple.getT1().resolvedBiography(),
                         tuple.getT1().name(),
                         tuple.getT1().businessId(),
                         tuple.getT1().niu(),
@@ -106,6 +125,17 @@ public class ActorController {
                 .flatMap(tuple -> updateBusinessActorUseCase.update(new UpdateBusinessActorCommand(
                         tuple.getT2().tenantId(),
                         tuple.getT2().userId(),
+                        tuple.getT1().code(),
+                        tuple.getT1().resolvedIndividual(),
+                        tuple.getT1().resolvedAvailable(),
+                        tuple.getT1().resolvedVerified(),
+                        tuple.getT1().resolvedActive(),
+                        tuple.getT1().type(),
+                        tuple.getT1().role(),
+                        tuple.getT1().qualifications(),
+                        tuple.getT1().paymentMethods(),
+                        tuple.getT1().addresses(),
+                        tuple.getT1().resolvedBiography(),
                         tuple.getT1().name(),
                         tuple.getT1().businessId(),
                         tuple.getT1().niu(),

@@ -2,14 +2,19 @@ package yowyob.comops.api.kernel.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import yowyob.comops.api.common.domain.model.ApiResponse;
+import yowyob.comops.api.kernel.adapter.in.web.ClientApplicationServiceEntitlementWebFilter;
 import yowyob.comops.api.kernel.adapter.in.web.OrganizationServiceEntitlementWebFilter;
+import yowyob.comops.api.kernel.adapter.in.web.PlatformServiceRouteResolver;
 import yowyob.comops.api.kernel.application.port.in.AuthenticateClientApplicationUseCase;
-import yowyob.comops.api.kernel.application.port.out.OrganizationServiceEntitlementDirectory;
+import yowyob.comops.api.kernel.application.port.out.OrganizationServiceRuntimeEntitlementDirectory;
 import yowyob.comops.api.kernel.application.port.out.ReactivePermissionResolver;
 import java.nio.charset.StandardCharsets;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -67,9 +72,12 @@ public class KernelSecurityConfiguration {
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
             SecurityRuntimeProperties securityRuntimeProperties,
             AuthenticateClientApplicationUseCase authenticateClientApplicationUseCase,
-            OrganizationServiceEntitlementDirectory organizationServiceEntitlementDirectory,
+            OrganizationServiceRuntimeEntitlementDirectory organizationServiceRuntimeEntitlementDirectory,
             ReactivePermissionResolver permissionResolver,
             UserSessionTokenService userSessionTokenService,
+            ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
+            OrganizationServiceRequestQuotaProperties organizationServiceRequestQuotaProperties,
+            MeterRegistry meterRegistry,
             ObjectMapper objectMapper) {
         ReactiveAuthenticationManager apiKeyAuthenticationManager = apiKeyAuthenticationManager(
                 securityRuntimeProperties, authenticateClientApplicationUseCase, permissionResolver);
@@ -77,8 +85,13 @@ public class KernelSecurityConfiguration {
         apiKeyFilter.setServerAuthenticationConverter(new ApiKeyServerAuthenticationConverter(userSessionTokenService));
         apiKeyFilter.setRequiresAuthenticationMatcher(apiAuthenticationMatcher());
         apiKeyFilter.setSecurityContextRepository(NoOpServerSecurityContextRepository.getInstance());
+        PlatformServiceRouteResolver routeResolver = new PlatformServiceRouteResolver();
+        ClientApplicationServiceEntitlementWebFilter clientApplicationServiceEntitlementWebFilter =
+                new ClientApplicationServiceEntitlementWebFilter(routeResolver, objectMapper);
         OrganizationServiceEntitlementWebFilter organizationServiceEntitlementWebFilter =
-                new OrganizationServiceEntitlementWebFilter(organizationServiceEntitlementDirectory, objectMapper);
+                new OrganizationServiceEntitlementWebFilter(organizationServiceRuntimeEntitlementDirectory, routeResolver,
+                        redisTemplateProvider.getIfAvailable(), organizationServiceRequestQuotaProperties,
+                        objectMapper, meterRegistry);
 
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
@@ -97,6 +110,7 @@ public class KernelSecurityConfiguration {
                         .pathMatchers("/api/**").authenticated()
                         .anyExchange().permitAll())
                 .addFilterAt(apiKeyFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAfter(clientApplicationServiceEntitlementWebFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .addFilterAt(organizationServiceEntitlementWebFilter, SecurityWebFiltersOrder.AUTHORIZATION)
                 .build();
     }

@@ -25,6 +25,13 @@ public class OrganizationServiceSubscriptionR2dbcRepositoryAdapter implements Or
     }
 
     @Override
+    public Mono<OrganizationServiceSubscription> findByOrganizationAndServiceCode(UUID tenantId, UUID organizationId,
+            String serviceCode) {
+        return repository.findByTenantIdAndOrganizationIdAndServiceCode(tenantId, organizationId, serviceCode)
+                .map(this::toDomain);
+    }
+
+    @Override
     public Flux<OrganizationServiceSubscription> findByOrganizationId(UUID tenantId, UUID organizationId) {
         return repository.findAllByTenantIdAndOrganizationId(tenantId, organizationId)
                 .map(this::toDomain);
@@ -48,11 +55,15 @@ public class OrganizationServiceSubscriptionR2dbcRepositoryAdapter implements Or
                 subscription.createdAt(),
                 subscription.updatedAt(),
                 subscription.organizationId(),
-                subscription.serviceCode());
+                subscription.serviceCode(),
+                subscription.requestQuotaLimit(),
+                subscription.requestQuotaWindowSeconds());
     }
 
     private OrganizationServiceSubscription toDomain(OrganizationServiceSubscriptionEntity entity) {
         return OrganizationServiceSubscription.rehydrate(entity.id(), entity.tenantId(), entity.createdAt(),
-                entity.updatedAt(), entity.organizationId(), entity.serviceCode());
+                entity.updatedAt(), entity.organizationId(), entity.serviceCode(),
+                entity.requestQuotaLimit() == null ? 0L : entity.requestQuotaLimit(),
+                entity.requestQuotaWindowSeconds() == null ? 0L : entity.requestQuotaWindowSeconds());
     }
 }

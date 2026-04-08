@@ -6,7 +6,15 @@ import java.util.UUID;
 public record UserOrganizationAccess(
         UUID organizationId,
         String organizationCode,
-        String displayName,
-        String legalName,
+        String shortName,
+        String longName,
         List<String> services) {
+
+    public String displayName() {
+        return shortName;
+    }
+
+    public String legalName() {
+        return longName;
+    }
 }

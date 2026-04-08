@@ -15,6 +15,10 @@
     <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V20__third_party_follow_up.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V21__client_applications.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V22__organization_service_subscriptions.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V23__client_application_service_restrictions.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V24__organization_service_request_quotas.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V25__canonical_schema_alignment.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V26__canonical_secondary_entities.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V2__sales_and_accounting_lines.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V3__treasury_indexes.sql" dialect="GenericSQL" />
     <file url="file://$PROJECT_DIR$/KSM_Kernel_Layer-main/RT-comops-bootstrap/src/main/resources/db/r2dbc/V4__resource_indexes.sql" dialect="GenericSQL" />

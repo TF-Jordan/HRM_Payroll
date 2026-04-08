@@ -13,5 +13,7 @@ public record OrganizationServiceSubscriptionEntity(
         Instant createdAt,
         Instant updatedAt,
         UUID organizationId,
-        String serviceCode) implements PersistableEntity {
+        String serviceCode,
+        Long requestQuotaLimit,
+        Long requestQuotaWindowSeconds) implements PersistableEntity {
 }

@@ -6,5 +6,5 @@ import reactor.core.publisher.Mono;
 public interface SubscribeOrganizationServiceUseCase {
 
     Mono<OrganizationServiceEntitlements> subscribeOrganizationService(UUID tenantId, UUID organizationId,
-            String serviceCode);
+            String serviceCode, Long requestQuotaLimit, Long requestQuotaWindowSeconds);
 }

@@ -24,15 +24,23 @@ public class ActorApplicationService implements CreateActorUseCase {
 
         Actor actor = Actor.create(
                 command.tenantId(),
+                command.organizationId(),
                 command.firstName(),
                 command.lastName(),
+                command.name(),
                 command.phoneNumber(),
                 command.email(),
+                command.description(),
+                command.type(),
                 command.gender(),
+                command.photoUri(),
+                command.photoId(),
                 command.nationality(),
                 command.birthDate(),
                 command.profession(),
-                command.biography());
+                command.biography(),
+                command.addresses(),
+                command.contacts());
 
         if (actor.email() == null) {
             return actorRepository.save(actor);

@@ -106,6 +106,18 @@ Lecture correcte de ce resultat :
 - la campagne de saturation/endurance existe maintenant
 - la prochaine lecture utile n'est plus "est-ce que ca tient", mais "ou veut-on placer le plafond de protection"
 
+Depuis l introduction des `ClientApplications` bornees par service, la lecture des campagnes doit aussi tenir compte de:
+- `X-Client-Id`
+- service derive de la route
+- quota backend par `(tenantId, clientId, serviceCode)`
+- quota metier par `(tenantId, organizationId, serviceCode)`
+
+Les prochaines campagnes doivent donc varier:
+- plusieurs `clientId`
+- plusieurs families de routes (`COMMERCIAL`, `SALES`, `TREASURY`, etc.)
+- plusieurs organisations dans un meme tenant
+- plusieurs profils de quotas organisationnels par service
+
 ## Limites actuelles
 
 - ce n'est pas encore une campagne de performance complete

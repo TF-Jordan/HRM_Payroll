@@ -3,6 +3,8 @@ package yowyob.comops.api.kernel.adapter.out.persistence;
 import yowyob.comops.api.kernel.application.port.out.ClientApplicationRepository;
 import yowyob.comops.api.kernel.domain.model.ClientApplication;
 import yowyob.comops.api.kernel.domain.model.ClientApplicationStatus;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -55,6 +57,7 @@ public class ClientApplicationR2dbcRepositoryAdapter implements ClientApplicatio
                 clientApplication.secretHash(),
                 clientApplication.status().name(),
                 clientApplication.systemManaged(),
+                clientApplication.allowedServiceCodes().toArray(String[]::new),
                 clientApplication.lastAuthenticatedAt(),
                 clientApplication.secretRotatedAt());
     }
@@ -62,7 +65,10 @@ public class ClientApplicationR2dbcRepositoryAdapter implements ClientApplicatio
     private ClientApplication toDomain(ClientApplicationEntity entity) {
         return ClientApplication.rehydrate(entity.id(), entity.createdAt(), entity.updatedAt(), entity.clientId(),
                 entity.name(), entity.description(), entity.secretHash(),
-                ClientApplicationStatus.valueOf(entity.status()), entity.systemManaged(), entity.lastAuthenticatedAt(),
-                entity.secretRotatedAt());
+                ClientApplicationStatus.valueOf(entity.status()), entity.systemManaged(),
+                entity.allowedServiceCodes() == null
+                        ? java.util.Set.of()
+                        : new LinkedHashSet<>(Arrays.asList(entity.allowedServiceCodes())),
+                entity.lastAuthenticatedAt(), entity.secretRotatedAt());
     }
 }

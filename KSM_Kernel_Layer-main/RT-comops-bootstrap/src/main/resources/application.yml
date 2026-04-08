@@ -91,6 +91,7 @@ iwm:
         name: ${IWM_BOOTSTRAP_CLIENT_NAME:Bootstrap Client}
         description: ${IWM_BOOTSTRAP_CLIENT_DESCRIPTION:Bootstrap server-to-server client application.}
         secret: ${IWM_BOOTSTRAP_CLIENT_SECRET:}
+        allowed-services: ${IWM_BOOTSTRAP_CLIENT_ALLOWED_SERVICES:}
     jwt:
       private-key-path: ${IWM_JWT_PRIVATE_KEY_PATH:}
       key-id: ${IWM_JWT_KEY_ID:iwm-key-1}
@@ -121,3 +122,12 @@ iwm:
       window: ${IWM_TENANT_REQUEST_QUOTA_WINDOW:1m}
       fail-open: ${IWM_TENANT_REQUEST_QUOTA_FAIL_OPEN:true}
       key-prefix: ${IWM_TENANT_REQUEST_QUOTA_KEY_PREFIX:iwm:quotas:tenant-requests}
+      core-service-code: ${IWM_TENANT_REQUEST_QUOTA_CORE_SERVICE_CODE:CORE}
+    organization-service-requests:
+      enabled: ${IWM_ORGANIZATION_SERVICE_REQUEST_QUOTA_ENABLED:false}
+      fail-open: ${IWM_ORGANIZATION_SERVICE_REQUEST_QUOTA_FAIL_OPEN:true}
+      key-prefix: ${IWM_ORGANIZATION_SERVICE_REQUEST_QUOTA_KEY_PREFIX:iwm:quotas:organization-service-requests}
+  organization:
+    service-subscriptions:
+      default-request-quota-limit: ${IWM_ORGANIZATION_SERVICE_DEFAULT_REQUEST_QUOTA_LIMIT:10000}
+      default-request-quota-window: ${IWM_ORGANIZATION_SERVICE_DEFAULT_REQUEST_QUOTA_WINDOW:1m}

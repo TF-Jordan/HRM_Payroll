@@ -1,5 +1,6 @@
 package yowyob.comops.api.kernel.application.service;
 
+import yowyob.comops.api.common.domain.model.PlatformServiceCode;
 import yowyob.comops.api.kernel.application.port.in.AuthenticateClientApplicationUseCase;
 import yowyob.comops.api.kernel.application.port.in.ListClientApplicationsUseCase;
 import yowyob.comops.api.kernel.application.port.in.RegisterClientApplicationCommand;
@@ -7,6 +8,8 @@ import yowyob.comops.api.kernel.application.port.in.RegisterClientApplicationUse
 import yowyob.comops.api.kernel.application.port.in.RevokeClientApplicationUseCase;
 import yowyob.comops.api.kernel.application.port.in.RotateClientApplicationSecretCommand;
 import yowyob.comops.api.kernel.application.port.in.RotateClientApplicationSecretUseCase;
+import yowyob.comops.api.kernel.application.port.in.UpdateClientApplicationCommand;
+import yowyob.comops.api.kernel.application.port.in.UpdateClientApplicationUseCase;
 import yowyob.comops.api.kernel.application.port.out.ClientApplicationRepository;
 import yowyob.comops.api.kernel.config.SecurityRuntimeProperties;
 import yowyob.comops.api.kernel.domain.ClientApplicationNotFoundException;
@@ -15,7 +18,9 @@ import yowyob.comops.api.kernel.domain.model.ClientApplication;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,7 +29,8 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class ClientApplicationService implements AuthenticateClientApplicationUseCase, ListClientApplicationsUseCase,
-        RegisterClientApplicationUseCase, RotateClientApplicationSecretUseCase, RevokeClientApplicationUseCase {
+        RegisterClientApplicationUseCase, RotateClientApplicationSecretUseCase, RevokeClientApplicationUseCase,
+        UpdateClientApplicationUseCase {
 
     private static final SecureRandom SECRET_RANDOM = new SecureRandom();
 
@@ -60,8 +66,20 @@ public class ClientApplicationService implements AuthenticateClientApplicationUs
                 .flatMap(exists -> exists
                         ? Mono.error(new DuplicateClientApplicationIdException(normalizedClientId))
                         : repository.save(ClientApplication.register(normalizedClientId, command.name(),
-                                command.description(), passwordEncoder.encode(rawSecret), command.systemManaged()))
+                                command.description(), passwordEncoder.encode(rawSecret),
+                                normalizeAllowedServices(command.allowedServices()), command.systemManaged()))
                                 .map(clientApplication -> new ProvisionedClientApplication(clientApplication, rawSecret)));
+    }
+
+    @Override
+    public Mono<ClientApplication> update(UpdateClientApplicationCommand command) {
+        return repository.findById(command.clientApplicationId())
+                .switchIfEmpty(Mono.error(new ClientApplicationNotFoundException(command.clientApplicationId())))
+                .flatMap(existing -> repository.save(existing.updateDefinition(
+                        command.name(),
+                        command.description(),
+                        normalizeAllowedServices(command.allowedServices()),
+                        existing.systemManaged())));
     }
 
     @Override
@@ -89,7 +107,10 @@ public class ClientApplicationService implements AuthenticateClientApplicationUs
         String encodedSecret = passwordEncoder.encode(normalizedSecret);
         return repository.findByClientId(normalizedClientId)
                 .flatMap(existing -> {
-                    ClientApplication updated = existing.updateDefinition(bootstrap.getName(), bootstrap.getDescription(),
+                    ClientApplication updated = existing.updateDefinition(
+                            bootstrap.getName(),
+                            bootstrap.getDescription(),
+                            normalizeAllowedServices(bootstrap.getAllowedServices()),
                             true);
                     if (!existing.isActive()) {
                         updated = updated.activate();
@@ -100,7 +121,8 @@ public class ClientApplicationService implements AuthenticateClientApplicationUs
                     return repository.save(updated);
                 })
                 .switchIfEmpty(repository.save(ClientApplication.register(normalizedClientId, bootstrap.getName(),
-                        bootstrap.getDescription(), encodedSecret, true)));
+                        bootstrap.getDescription(), encodedSecret,
+                        normalizeAllowedServices(bootstrap.getAllowedServices()), true)));
     }
 
     private String normalizeClientId(String clientId) {
@@ -124,5 +146,17 @@ public class ClientApplicationService implements AuthenticateClientApplicationUs
         byte[] randomBytes = new byte[32];
         SECRET_RANDOM.nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
+
+    private Set<String> normalizeAllowedServices(java.util.List<String> requestedServices) {
+        if (requestedServices == null || requestedServices.isEmpty()) {
+            return new LinkedHashSet<>(PlatformServiceCode.catalog().stream().map(PlatformServiceCode::code).toList());
+        }
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
+        requestedServices.stream()
+                .map(PlatformServiceCode::from)
+                .map(PlatformServiceCode::code)
+                .forEach(normalized::add);
+        return Set.copyOf(normalized);
     }
 }

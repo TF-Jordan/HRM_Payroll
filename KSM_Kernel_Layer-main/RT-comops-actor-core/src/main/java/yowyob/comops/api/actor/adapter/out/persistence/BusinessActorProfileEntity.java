@@ -2,6 +2,7 @@ package yowyob.comops.api.actor.adapter.out.persistence;
 
 import yowyob.comops.api.common.adapter.out.persistence.PersistableEntity;
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
@@ -17,6 +18,18 @@ public record BusinessActorProfileEntity(
         UUID governedByUserId,
         Instant governedAt,
         String governanceReason,
+        String code,
+        boolean isIndividual,
+        boolean isAvailable,
+        boolean isVerified,
+        boolean isActive,
+        String type,
+        String role,
+        Set<String> qualifications,
+        Set<String> paymentMethods,
+        Set<UUID> addresses,
+        String biography,
+        Instant deletedAt,
         String name,
         String businessId,
         String niu,

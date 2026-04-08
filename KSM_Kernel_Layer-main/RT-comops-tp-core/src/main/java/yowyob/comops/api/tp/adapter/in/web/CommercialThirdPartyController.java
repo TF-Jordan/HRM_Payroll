@@ -137,7 +137,27 @@ public abstract class CommercialThirdPartyController {
                                                 tuple.getT1().accountingAccount(),
                                                 tuple.getT1().segment(),
                                                 tuple.getT1().qualificationScore(),
-                                                tuple.getT1().active() == null || tuple.getT1().active())))
+                                                tuple.getT1().active() == null || tuple.getT1().active(),
+                                                tuple.getT1().type(),
+                                                tuple.getT1().legalForm(),
+                                                tuple.getT1().uniqueIdentificationNumber(),
+                                                tuple.getT1().tradeRegistrationNumber(),
+                                                tuple.getT1().acronym(),
+                                                tuple.getT1().longName(),
+                                                tuple.getT1().logoUri(),
+                                                tuple.getT1().logoId(),
+                                                tuple.getT1().accountingAccountNumbers(),
+                                                tuple.getT1().authorizedPaymentMethods(),
+                                                tuple.getT1().authorizedCreditLimit(),
+                                                tuple.getT1().maxDiscountRate(),
+                                                tuple.getT1().vatSubject(),
+                                                tuple.getT1().operationsBalance(),
+                                                tuple.getT1().openingBalance(),
+                                                tuple.getT1().payTermNumber(),
+                                                tuple.getT1().payTermType(),
+                                                tuple.getT1().thirdPartyFamily(),
+                                                tuple.getT1().classification(),
+                                                tuple.getT1().taxNumber())))
                                 .map(ThirdPartyResponse::from)
                                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
                                                 .body(ApiResponse.success(response, singularLabel + " created.")));
@@ -158,7 +178,27 @@ public abstract class CommercialThirdPartyController {
                                                 tuple.getT1().accountingAccount(),
                                                 tuple.getT1().segment(),
                                                 tuple.getT1().qualificationScore(),
-                                                tuple.getT1().active() == null || tuple.getT1().active())))
+                                                tuple.getT1().active() == null || tuple.getT1().active(),
+                                                tuple.getT1().type(),
+                                                tuple.getT1().legalForm(),
+                                                tuple.getT1().uniqueIdentificationNumber(),
+                                                tuple.getT1().tradeRegistrationNumber(),
+                                                tuple.getT1().acronym(),
+                                                tuple.getT1().longName(),
+                                                tuple.getT1().logoUri(),
+                                                tuple.getT1().logoId(),
+                                                tuple.getT1().accountingAccountNumbers(),
+                                                tuple.getT1().authorizedPaymentMethods(),
+                                                tuple.getT1().authorizedCreditLimit(),
+                                                tuple.getT1().maxDiscountRate(),
+                                                tuple.getT1().vatSubject(),
+                                                tuple.getT1().operationsBalance(),
+                                                tuple.getT1().openingBalance(),
+                                                tuple.getT1().payTermNumber(),
+                                                tuple.getT1().payTermType(),
+                                                tuple.getT1().thirdPartyFamily(),
+                                                tuple.getT1().classification(),
+                                                tuple.getT1().taxNumber())))
                                 .filter(thirdParty -> thirdParty.hasRole(role))
                                 .switchIfEmpty(Mono.error(new ThirdPartyNotFoundException(thirdPartyId)))
                                 .map(ThirdPartyResponse::from)

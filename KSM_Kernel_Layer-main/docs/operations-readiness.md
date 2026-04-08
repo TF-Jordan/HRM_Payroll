@@ -42,6 +42,23 @@
 - `iwm.quotas.tenant_requests.allowed`
 - `iwm.quotas.tenant_requests.rejected`
 - `iwm.quotas.tenant_requests.fail_open`
+- `iwm.quotas.organization_service_requests.allowed`
+- `iwm.quotas.organization_service_requests.rejected`
+- `iwm.quotas.organization_service_requests.fail_open`
+
+Les quotas backend sont maintenant comptes par:
+- `tenantId`
+- `clientId`
+- `serviceCode`
+- bucket temporel
+
+Le service est derive de la route quand elle est mappee, sinon le fallback `iwm.quotas.tenant-requests.core-service-code` est utilise.
+
+Les quotas metier d'organisation sont maintenant comptes par:
+- `tenantId`
+- `organizationId`
+- `serviceCode`
+- bucket temporel propre au service souscrit
 
 ## Alertes recommandees
 - `iwm.outbox.dead_letter > 0` pendant 5 minutes
@@ -50,7 +67,10 @@
 - `iwm.projections.latest_age.seconds > 1800` alors que `iwm.outbox.published > 0`
 - `kafka.consumer.records.lag.max` non nul durablement
 - `increase(iwm_quotas_tenant_requests_rejected_total[5m]) > 0` de facon inattendue
+- `increase(iwm_quotas_organization_service_requests_rejected_total[5m]) > 0` de facon inattendue
 - health `operations != UP`
+- hausse anormale de `429` concentree sur un `clientId` ou un `serviceCode`
+- hausse anormale de `429` concentree sur une `organizationId`
 
 ## Configuration recommande
 - exposer `metrics` et `prometheus` uniquement sur reseau interne ou via ingress restreint
@@ -58,6 +78,8 @@
 - ne pas laisser un `bootstrap client` partage entre plusieurs backends applicatifs
 - ne pas partager `IWM_MANAGEMENT_API_KEY` avec un secret de `ClientApplication`
 - ne jamais laisser `IWM_BOOTSTRAP_CLIENT_SECRET` vide ou partage hors canal secret
+- ne pas laisser `IWM_BOOTSTRAP_CLIENT_ALLOWED_SERVICES` vide en pre-prod/prod si le backend consommateur n a pas vocation a appeler tout le kernel
+- ne pas laisser `IWM_ORGANIZATION_SERVICE_DEFAULT_REQUEST_QUOTA_LIMIT` a une valeur uniforme sans revue metier si plusieurs offres commerciales existent
 - garder `Liquibase` actif en pre-prod et prod pour les migrations versionnees
 - en local, `Prometheus` et `Grafana` sont provisionnes via `docker-compose.infrastructure.yml`
 - en local, la validation bout en bout peut etre faite via `docker-compose.infrastructure.yml` + `docker-compose.application.yml`
@@ -65,7 +87,8 @@
 - en local full compose, le scrape applicatif utilise `ops/prometheus/prometheus.compose.yml`
 - la protection du trafic repose sur deux couches:
   - rate limiting Nginx par IP et par tenant
-  - quota backend par tenant via Redis
+  - quota backend par `tenant + client application + service` via Redis
+  - quota metier par `organization + service` via Redis
 
 ## Commandes utiles
 ```bash
@@ -73,6 +96,10 @@ curl -H "X-Management-Api-Key: $IWM_MANAGEMENT_API_KEY" http://localhost:8081/ac
 curl -H "X-Client-Id: $IWM_BOOTSTRAP_CLIENT_ID" -H "X-Api-Key: $IWM_BOOTSTRAP_CLIENT_SECRET" \
   -H "X-Tenant-Id: <tenant>" -H "Authorization: Bearer <access-token>" \
   http://localhost:8080/api/observability/runtime
+curl -i -H "X-Client-Id: <client-id>" -H "X-Api-Key: <client-secret>" \
+  -H "X-Tenant-Id: <tenant-id>" -H "Authorization: Bearer <access-token>" \
+  -H "X-Organization-Id: <organization-id>" \
+  http://localhost:8080/api/sales/orders/<order-id>
 curl -H "X-Management-Api-Key: $IWM_MANAGEMENT_API_KEY" http://localhost:8081/actuator/health/operations
 curl -H "X-Management-Api-Key: $IWM_MANAGEMENT_API_KEY" http://localhost:8081/actuator/prometheus
 curl http://localhost:8080/.well-known/jwks.json
@@ -86,7 +113,9 @@ curl http://localhost:8080/.well-known/jwks.json
 5. verifier le topic Kafka principal et le dead-letter
 6. verifier l'etat Redis si le cache de permissions est active
 7. verifier l'etat Elasticsearch si la recherche est active
-8. verifier les dashboards Grafana du dossier `ops/grafana/dashboards`
+8. verifier les headers `X-IWM-Quota-*` sur une requete representative
+9. verifier les headers `X-IWM-Organization-Quota-*` sur une requete representative
+10. verifier les dashboards Grafana du dossier `ops/grafana/dashboards`
 
 ## Dashboards
 - `IWM Outbox Runtime`

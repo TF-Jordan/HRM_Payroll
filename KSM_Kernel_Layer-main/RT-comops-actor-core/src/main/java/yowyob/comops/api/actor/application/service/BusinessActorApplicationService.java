@@ -51,9 +51,13 @@ public class BusinessActorApplicationService
                 .flatMap(actorId -> businessActorProfileRepository.findByActorId(command.tenantId(), actorId)
                         .flatMap(existing -> Mono.<BusinessActorProfile>error(new BusinessActorAlreadyExistsException(actorId)))
                         .switchIfEmpty(Mono.defer(() -> applyApprovalPolicy(command.tenantId(),
-                                BusinessActorProfile.create(command.tenantId(), actorId, command.name(), command.businessId(),
-                                        command.niu(), command.tradeRegistryNumber(), command.website(),
-                                        command.contactPhone(), command.privateAddress(), command.businessAddress(),
+                                BusinessActorProfile.create(command.tenantId(), actorId, command.code(),
+                                        command.isIndividual(), command.isAvailable(), command.isVerified(),
+                                        command.isActive(), command.type(), command.role(), command.qualifications(),
+                                        command.paymentMethods(), command.addresses(), command.biography(),
+                                        command.name(), command.businessId(), command.niu(),
+                                        command.tradeRegistryNumber(), command.website(), command.contactPhone(),
+                                        command.privateAddress(), command.businessAddress(),
                                         command.businessProfile()))
                                 .flatMap(businessActorProfileRepository::save))));
     }
@@ -71,7 +75,10 @@ public class BusinessActorApplicationService
         return resolveActorId(command.tenantId(), command.userId())
                 .flatMap(actorId -> businessActorProfileRepository.findByActorId(command.tenantId(), actorId)
                         .switchIfEmpty(Mono.error(new BusinessActorNotFoundException(actorId)))
-                        .map(existing -> existing.update(command.name(), command.businessId(), command.niu(),
+                        .map(existing -> existing.update(command.code(), command.isIndividual(), command.isAvailable(),
+                                command.isVerified(), command.isActive(), command.type(), command.role(),
+                                command.qualifications(), command.paymentMethods(), command.addresses(),
+                                command.biography(), command.name(), command.businessId(), command.niu(),
                                 command.tradeRegistryNumber(), command.website(), command.contactPhone(),
                                 command.privateAddress(), command.businessAddress(), command.businessProfile()))
                         .flatMap(businessActorProfileRepository::save));

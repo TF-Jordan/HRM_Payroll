@@ -17,6 +17,7 @@ public record ClientApplicationEntity(
         String secretHash,
         String status,
         boolean systemManaged,
+        String[] allowedServiceCodes,
         Instant lastAuthenticatedAt,
         Instant secretRotatedAt) implements PersistableEntity {
 }

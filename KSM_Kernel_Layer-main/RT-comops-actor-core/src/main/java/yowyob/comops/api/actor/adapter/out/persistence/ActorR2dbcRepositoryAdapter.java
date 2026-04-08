@@ -28,14 +28,18 @@ public class ActorR2dbcRepositoryAdapter implements ActorRepository {
     }
 
     private ActorEntity toEntity(Actor actor) {
-        return new ActorEntity(actor.id(), actor.tenantId(), actor.createdAt(), actor.updatedAt(), actor.firstName(), actor.lastName(),
-                actor.phoneNumber(), actor.email(), actor.gender(), actor.nationality(), actor.birthDate(), actor.profession(),
-                actor.biography(), actor.deletedAt());
+        return new ActorEntity(actor.id(), actor.tenantId(), actor.createdAt(), actor.updatedAt(),
+                actor.organizationId(), actor.firstName(), actor.lastName(), actor.name(), actor.phoneNumber(),
+                actor.email(), actor.description(), actor.type(), actor.gender(), actor.photoUri(), actor.photoId(),
+                actor.nationality(), actor.birthDate(), actor.profession(), actor.biography(), actor.addresses(),
+                actor.contacts(), actor.deletedAt());
     }
 
     private Actor toDomain(ActorEntity entity) {
-        return Actor.rehydrate(entity.id(), entity.tenantId(), entity.createdAt(), entity.updatedAt(), entity.firstName(),
-                entity.lastName(), entity.phoneNumber(), entity.email(), entity.gender(), entity.nationality(),
-                entity.birthDate(), entity.profession(), entity.biography(), entity.deletedAt());
+        return Actor.rehydrate(entity.id(), entity.tenantId(), entity.createdAt(), entity.updatedAt(),
+                entity.organizationId(), entity.firstName(), entity.lastName(), entity.name(), entity.phoneNumber(),
+                entity.email(), entity.description(), entity.type(), entity.gender(), entity.photoUri(),
+                entity.photoId(), entity.nationality(), entity.birthDate(), entity.profession(), entity.biography(),
+                entity.addresses(), entity.contacts(), entity.deletedAt());
     }
 }

@@ -35,14 +35,21 @@ public class OrganizationSearchIndexConsumer implements BusinessEventConsumer {
                 event.tenantId(),
                 uuidValue(payload.get("businessActorId")),
                 stringValue(payload, "code"),
-                stringValue(payload, "legalName"),
-                stringValue(payload, "displayName"),
-                stringValue(payload, "organizationType"));
+                stringValue(payload, "service"),
+                stringValue(payload, "shortName"),
+                stringValue(payload, "longName"),
+                stringValue(payload, "legalForm"),
+                booleanValue(payload.get("isActive")),
+                stringValue(payload, "status"));
         return repository.save(document).then();
     }
 
     private UUID uuidValue(Object value) {
         return value == null ? null : UUID.fromString(value.toString());
+    }
+
+    private boolean booleanValue(Object value) {
+        return value != null && Boolean.parseBoolean(value.toString());
     }
 
     private String stringValue(Map<String, Object> payload, String key) {

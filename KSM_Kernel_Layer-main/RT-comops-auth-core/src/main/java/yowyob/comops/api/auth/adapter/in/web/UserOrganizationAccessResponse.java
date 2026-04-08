@@ -7,12 +7,14 @@ import java.util.UUID;
 public record UserOrganizationAccessResponse(
         UUID organizationId,
         String organizationCode,
+        String shortName,
+        String longName,
         String displayName,
         String legalName,
         List<String> services) {
 
     public static UserOrganizationAccessResponse from(UserOrganizationAccess access) {
         return new UserOrganizationAccessResponse(access.organizationId(), access.organizationCode(),
-                access.displayName(), access.legalName(), access.services());
+                access.shortName(), access.longName(), access.displayName(), access.legalName(), access.services());
     }
 }

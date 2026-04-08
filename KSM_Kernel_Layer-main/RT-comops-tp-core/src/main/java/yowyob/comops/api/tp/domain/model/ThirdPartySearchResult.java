@@ -11,16 +11,30 @@ public record ThirdPartySearchResult(
                 UUID organizationId,
                 PartyType partyType,
                 UUID partyId,
-                String referenceCode,
-                String displayName,
+                String code,
+                String name,
+                String type,
+                String longName,
                 Set<String> roles,
                 boolean prospect,
                 String accountingAccount,
                 String segment,
                 Integer qualificationScore,
-                boolean active,
+                boolean enabled,
                 Instant lastContactedAt,
                 Instant nextFollowUpAt,
                 String followUpStatus,
                 Instant convertedAt) {
+
+        public String referenceCode() {
+                return code;
+        }
+
+        public String displayName() {
+                return name;
+        }
+
+        public boolean active() {
+                return enabled;
+        }
 }

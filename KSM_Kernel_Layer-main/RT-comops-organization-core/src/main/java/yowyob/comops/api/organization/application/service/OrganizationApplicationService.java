@@ -1,5 +1,6 @@
 package yowyob.comops.api.organization.application.service;
 
+import yowyob.comops.api.common.domain.model.PlatformServiceCode;
 import yowyob.comops.api.kernel.application.port.out.BusinessEventPublisher;
 import yowyob.comops.api.kernel.application.port.out.ReactiveTransactionalExecutor;
 import yowyob.comops.api.kernel.domain.model.BusinessEvent;
@@ -18,6 +19,7 @@ import yowyob.comops.api.organization.application.port.out.OrganizationRepositor
 import yowyob.comops.api.organization.application.port.out.OrganizationSearchGateway;
 import yowyob.comops.api.organization.application.port.out.OrganizationSelfServiceCreationPolicy;
 import yowyob.comops.api.organization.application.port.out.OrganizationServiceSubscriptionRepository;
+import yowyob.comops.api.organization.config.OrganizationServiceSubscriptionQuotaProperties;
 import yowyob.comops.api.organization.domain.DuplicateOrganizationCodeException;
 import yowyob.comops.api.organization.domain.OrganizationNotFoundException;
 import yowyob.comops.api.organization.domain.OrganizationSearchUnavailableException;
@@ -25,7 +27,6 @@ import yowyob.comops.api.organization.domain.OrganizationSelfServiceCreationDisa
 import yowyob.comops.api.organization.domain.model.Organization;
 import yowyob.comops.api.organization.domain.model.OrganizationSearchResult;
 import yowyob.comops.api.organization.domain.model.OrganizationServiceSubscription;
-import yowyob.comops.api.organization.domain.model.PlatformServiceCode;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -46,6 +47,7 @@ public class OrganizationApplicationService
     private final Optional<OrganizationApprovalPolicy> organizationApprovalPolicy;
     private final Optional<OrganizationSelfServiceCreationPolicy> organizationSelfServiceCreationPolicy;
     private final OrganizationServiceSubscriptionRepository organizationServiceSubscriptionRepository;
+    private final OrganizationServiceSubscriptionQuotaProperties organizationServiceSubscriptionQuotaProperties;
     private final BusinessEventPublisher businessEventPublisher;
     private final ReactiveTransactionalExecutor transactionalExecutor;
 
@@ -55,6 +57,7 @@ public class OrganizationApplicationService
             Optional<OrganizationApprovalPolicy> organizationApprovalPolicy,
             Optional<OrganizationSelfServiceCreationPolicy> organizationSelfServiceCreationPolicy,
             OrganizationServiceSubscriptionRepository organizationServiceSubscriptionRepository,
+            OrganizationServiceSubscriptionQuotaProperties organizationServiceSubscriptionQuotaProperties,
             BusinessEventPublisher businessEventPublisher,
             ReactiveTransactionalExecutor transactionalExecutor) {
         this.organizationRepository = organizationRepository;
@@ -63,6 +66,7 @@ public class OrganizationApplicationService
         this.organizationApprovalPolicy = organizationApprovalPolicy;
         this.organizationSelfServiceCreationPolicy = organizationSelfServiceCreationPolicy;
         this.organizationServiceSubscriptionRepository = organizationServiceSubscriptionRepository;
+        this.organizationServiceSubscriptionQuotaProperties = organizationServiceSubscriptionQuotaProperties;
         this.businessEventPublisher = businessEventPublisher;
         this.transactionalExecutor = transactionalExecutor;
     }
@@ -75,9 +79,26 @@ public class OrganizationApplicationService
                         command.tenantId(),
                         command.businessActorId(),
                         command.code(),
-                        command.legalName(),
-                        command.displayName(),
-                        command.organizationType())))
+                        command.service(),
+                        command.isIndividualBusiness(),
+                        command.email(),
+                        command.shortName(),
+                        command.longName(),
+                        command.description(),
+                        command.logoUri(),
+                        command.logoId(),
+                        command.websiteUrl(),
+                        command.socialNetwork(),
+                        command.businessRegistrationNumber(),
+                        command.taxNumber(),
+                        command.capitalShare(),
+                        command.ceoName(),
+                        command.yearFounded(),
+                        command.keywords(),
+                        command.numberOfEmployees(),
+                        command.legalForm(),
+                        command.isActive(),
+                        command.status())))
                 .flatMap(organization -> organizationRepository.existsByCode(organization.tenantId(), organization.code())
                         .flatMap(exists -> exists
                                 ? Mono.error(new DuplicateOrganizationCodeException(organization.code()))
@@ -126,8 +147,14 @@ public class OrganizationApplicationService
                                     command.organizationId())
                             .flatMap(exists -> exists
                                     ? Mono.error(new DuplicateOrganizationCodeException(command.code()))
-                                    : organizationRepository.save(existing.update(command.code(), command.legalName(),
-                                            command.displayName(), command.organizationType())));
+                                    : organizationRepository.save(existing.update(command.code(), command.service(),
+                                            command.isIndividualBusiness(), command.email(), command.shortName(),
+                                            command.longName(), command.description(), command.logoUri(),
+                                            command.logoId(), command.websiteUrl(), command.socialNetwork(),
+                                            command.businessRegistrationNumber(), command.taxNumber(),
+                                            command.capitalShare(), command.ceoName(), command.yearFounded(),
+                                            command.keywords(), command.numberOfEmployees(), command.legalForm(),
+                                            command.isActive(), command.status())));
                 });
         return transactionalExecutor.transactional(operation);
     }
@@ -155,6 +182,12 @@ public class OrganizationApplicationService
         return BusinessEvent.now(organization.tenantId(), organization.id(), "ORGANIZATION_CREATED", "ORGANIZATION",
                 organization.id(), payload(
                         "code", organization.code(),
+                        "service", organization.service(),
+                        "shortName", organization.shortName(),
+                        "longName", organization.longName(),
+                        "legalForm", organization.legalForm(),
+                        "isActive", organization.isActive(),
+                        "status", organization.status(),
                         "legalName", organization.legalName(),
                         "displayName", organization.displayName(),
                         "organizationType", organization.organizationType(),
@@ -170,7 +203,10 @@ public class OrganizationApplicationService
                                 ? Mono.empty()
                                 : organizationServiceSubscriptionRepository.save(
                                                 OrganizationServiceSubscription.create(organization.tenantId(),
-                                                        organization.id(), serviceCode))
+                                                        organization.id(), serviceCode,
+                                                        organizationServiceSubscriptionQuotaProperties.getDefaultRequestQuotaLimit(),
+                                                        Math.max(1L, organizationServiceSubscriptionQuotaProperties
+                                                                .getDefaultRequestQuotaWindow().toSeconds())))
                                         .then()))
                 .then();
     }

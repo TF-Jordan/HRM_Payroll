@@ -50,7 +50,9 @@ public class ElasticsearchThirdPartySearchGateway implements ThirdPartySearchGat
         if (ElasticsearchQuerySupport.hasText(query)) {
             String normalized = query.trim();
             mustClauses.add(ElasticsearchQuerySupport.should(
+                    ElasticsearchQuerySupport.match("name", normalized),
                     ElasticsearchQuerySupport.match("displayName", normalized),
+                    ElasticsearchQuerySupport.term("code", normalized.toUpperCase()),
                     ElasticsearchQuerySupport.term("referenceCode", normalized.toUpperCase())));
         }
         return operations.search(
@@ -68,14 +70,16 @@ public class ElasticsearchThirdPartySearchGateway implements ThirdPartySearchGat
                 source.organizationId(),
                 PartyType.valueOf(source.partyType()),
                 source.partyId(),
-                source.referenceCode(),
-                source.displayName(),
+                source.code(),
+                source.name(),
+                source.type(),
+                source.longName(),
                 new LinkedHashSet<>(source.roles()),
                 source.prospect(),
                 source.accountingAccount(),
                 source.segment(),
                 source.qualificationScore(),
-                source.active(),
+                source.enabled(),
                 source.lastContactedAt(),
                 source.nextFollowUpAt(),
                 source.followUpStatus(),

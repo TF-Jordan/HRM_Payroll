@@ -50,6 +50,7 @@ public class SecurityRuntimeProperties {
         private String name = "Bootstrap Client";
         private String description = "Bootstrap server-to-server client application.";
         private String secret;
+        private java.util.List<String> allowedServices = java.util.List.of();
 
         public boolean isEnabled() {
             return enabled;
@@ -89,6 +90,14 @@ public class SecurityRuntimeProperties {
 
         public void setSecret(String secret) {
             this.secret = secret;
+        }
+
+        public java.util.List<String> getAllowedServices() {
+            return allowedServices;
+        }
+
+        public void setAllowedServices(java.util.List<String> allowedServices) {
+            this.allowedServices = allowedServices;
         }
     }
 

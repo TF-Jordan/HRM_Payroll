@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties({OutboxRelayProperties.class, KafkaOutboxDeliveryProperties.class,
         OutboxConsumersProperties.class, RedisPermissionCacheProperties.class, ElasticsearchSearchProperties.class,
         SecurityRuntimeProperties.class, OutboxRuntimeGuardProperties.class, KernelObservabilityProperties.class,
-        ManagementSecurityProperties.class, OutboxReplayProperties.class, TenantRequestQuotaProperties.class})
+        ManagementSecurityProperties.class, OutboxReplayProperties.class, TenantRequestQuotaProperties.class,
+        OrganizationServiceRequestQuotaProperties.class})
 public class KernelPropertiesConfiguration {
 }

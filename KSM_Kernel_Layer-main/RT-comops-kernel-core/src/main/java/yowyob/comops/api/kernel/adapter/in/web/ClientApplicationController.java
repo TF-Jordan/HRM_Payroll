@@ -7,11 +7,14 @@ import yowyob.comops.api.kernel.application.port.in.RegisterClientApplicationUse
 import yowyob.comops.api.kernel.application.port.in.RevokeClientApplicationUseCase;
 import yowyob.comops.api.kernel.application.port.in.RotateClientApplicationSecretCommand;
 import yowyob.comops.api.kernel.application.port.in.RotateClientApplicationSecretUseCase;
+import yowyob.comops.api.kernel.application.port.in.UpdateClientApplicationCommand;
+import yowyob.comops.api.kernel.application.port.in.UpdateClientApplicationUseCase;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,16 +32,19 @@ public class ClientApplicationController {
     private final RegisterClientApplicationUseCase registerClientApplicationUseCase;
     private final RotateClientApplicationSecretUseCase rotateClientApplicationSecretUseCase;
     private final RevokeClientApplicationUseCase revokeClientApplicationUseCase;
+    private final UpdateClientApplicationUseCase updateClientApplicationUseCase;
 
     public ClientApplicationController(
             ListClientApplicationsUseCase listClientApplicationsUseCase,
             RegisterClientApplicationUseCase registerClientApplicationUseCase,
             RotateClientApplicationSecretUseCase rotateClientApplicationSecretUseCase,
-            RevokeClientApplicationUseCase revokeClientApplicationUseCase) {
+            RevokeClientApplicationUseCase revokeClientApplicationUseCase,
+            UpdateClientApplicationUseCase updateClientApplicationUseCase) {
         this.listClientApplicationsUseCase = listClientApplicationsUseCase;
         this.registerClientApplicationUseCase = registerClientApplicationUseCase;
         this.rotateClientApplicationSecretUseCase = rotateClientApplicationSecretUseCase;
         this.revokeClientApplicationUseCase = revokeClientApplicationUseCase;
+        this.updateClientApplicationUseCase = updateClientApplicationUseCase;
     }
 
     @GetMapping
@@ -56,10 +62,26 @@ public class ClientApplicationController {
             @RequestBody Mono<CreateClientApplicationRequest> requestMono) {
         return requestMono
                 .flatMap(request -> registerClientApplicationUseCase.register(new RegisterClientApplicationCommand(
-                        request.clientId(), request.name(), request.description(), request.clientSecret(), false)))
+                        request.clientId(), request.name(), request.description(), request.clientSecret(),
+                        request.allowedServices(), false)))
                 .map(ProvisionedClientApplicationResponse::from)
                 .map(response -> ResponseEntity.status(HttpStatus.CREATED)
                         .body(ApiResponse.success(response, "Client application created.")));
+    }
+
+    @PatchMapping("/{clientApplicationId}")
+    @PreAuthorize("@businessAccessPolicy.canManageClientApplications(authentication)")
+    public Mono<ResponseEntity<ApiResponse<ClientApplicationResponse>>> update(
+            @PathVariable UUID clientApplicationId,
+            @RequestBody Mono<UpdateClientApplicationRequest> requestMono) {
+        return requestMono
+                .flatMap(request -> updateClientApplicationUseCase.update(new UpdateClientApplicationCommand(
+                        clientApplicationId,
+                        request.name(),
+                        request.description(),
+                        request.allowedServices())))
+                .map(ClientApplicationResponse::from)
+                .map(response -> ResponseEntity.ok(ApiResponse.success(response, "Client application updated.")));
     }
 
     @PostMapping("/{clientApplicationId}/rotate-secret")

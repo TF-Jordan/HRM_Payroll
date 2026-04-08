@@ -44,7 +44,16 @@ public class AgencyApplicationService
                 .switchIfEmpty(Mono.error(new OrganizationNotFoundException(command.organizationId())))
                 .flatMap(organization -> {
                     Agency agency = Agency.create(command.tenantId(), command.organizationId(), command.code(),
-                            command.name(), command.agencyType());
+                            command.ownerId(), command.managerId(), command.name(), command.location(),
+                            command.description(), command.transferable(), command.active(), command.logoUri(),
+                            command.logoId(), command.shortName(), command.longName(),
+                            command.isIndividualBusiness(), command.isHeadquarter(), command.country(),
+                            command.city(), command.latitude(), command.longitude(), command.openTime(),
+                            command.closeTime(), command.phone(), command.email(), command.whatsapp(),
+                            command.greetingMessage(), command.averageRevenue(), command.capitalShare(),
+                            command.registrationNumber(), command.socialNetwork(), command.taxNumber(),
+                            command.keywords(), command.isPublic(), command.isBusiness(),
+                            command.totalAffiliatedCustomers(), command.agencyType());
                     return agencyRepository.existsByCode(command.tenantId(), command.organizationId(), agency.code())
                             .flatMap(exists -> exists
                                     ? Mono.error(new DuplicateAgencyCodeException(agency.code()))
@@ -66,7 +75,20 @@ public class AgencyApplicationService
                 .flatMap(existing -> agencyRepository.existsByCode(command.tenantId(), existing.organizationId(), command.code())
                         .flatMap(exists -> exists && !existing.code().equalsIgnoreCase(command.code())
                                 ? Mono.<Agency>error(new DuplicateAgencyCodeException(command.code()))
-                                : agencyRepository.save(existing.update(command.code(), command.name(), command.agencyType()))));
+                                : agencyRepository.save(existing.update(command.code(), command.ownerId(),
+                                        command.managerId(), command.name(), command.location(),
+                                        command.description(), command.transferable(), command.active(),
+                                        command.logoUri(), command.logoId(), command.shortName(),
+                                        command.longName(), command.isIndividualBusiness(),
+                                        command.isHeadquarter(), command.country(), command.city(),
+                                        command.latitude(), command.longitude(), command.openTime(),
+                                        command.closeTime(), command.phone(), command.email(),
+                                        command.whatsapp(), command.greetingMessage(),
+                                        command.averageRevenue(), command.capitalShare(),
+                                        command.registrationNumber(), command.socialNetwork(),
+                                        command.taxNumber(), command.keywords(), command.isPublic(),
+                                        command.isBusiness(), command.totalAffiliatedCustomers(),
+                                        command.agencyType()))));
     }
 
     @Override

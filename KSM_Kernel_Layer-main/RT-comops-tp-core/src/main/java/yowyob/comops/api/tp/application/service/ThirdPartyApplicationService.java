@@ -86,14 +86,35 @@ public class ThirdPartyApplicationService implements CreateThirdPartyUseCase, Ge
                                 command.tenantId(),
                                 command.organizationId(),
                                 new PartyRef(command.partyType(), command.partyId()),
-                                command.referenceCode(),
-                                command.displayName(),
+                                command.code(),
+                                command.name(),
                                 command.roles(),
                                 command.prospect(),
                                 command.accountingAccount(),
                                 command.segment(),
                                 command.qualificationScore(),
-                                command.active());
+                                command.enabled(),
+                                command.type(),
+                                command.legalForm(),
+                                command.uniqueIdentificationNumber(),
+                                command.tradeRegistrationNumber(),
+                                command.name(),
+                                command.acronym(),
+                                command.longName(),
+                                command.logoUri(),
+                                command.logoId(),
+                                command.accountingAccountNumbers(),
+                                command.authorizedPaymentMethods(),
+                                command.authorizedCreditLimit(),
+                                command.maxDiscountRate(),
+                                command.vatSubject() == null ? false : command.vatSubject(),
+                                command.operationsBalance(),
+                                command.openingBalance(),
+                                command.payTermNumber(),
+                                command.payTermType(),
+                                command.thirdPartyFamily(),
+                                command.classification(),
+                                command.taxNumber());
 
                 Mono<ThirdParty> operation = assertReferenceAvailable(thirdParty.tenantId(),
                                 thirdParty.organizationId(),
@@ -173,7 +194,28 @@ public class ThirdPartyApplicationService implements CreateThirdPartyUseCase, Ge
                                                         command.displayName(), command.roles(),
                                                         command.prospect(), command.accountingAccount(),
                                                         command.segment(),
-                                                        command.qualificationScore(), command.active());
+                                                        command.qualificationScore(), command.enabled(),
+                                                        command.type(),
+                                                        command.legalForm(),
+                                                        command.uniqueIdentificationNumber(),
+                                                        command.tradeRegistrationNumber(),
+                                                        command.name(),
+                                                        command.acronym(),
+                                                        command.longName(),
+                                                        command.logoUri(),
+                                                        command.logoId(),
+                                                        command.accountingAccountNumbers(),
+                                                        command.authorizedPaymentMethods(),
+                                                        command.authorizedCreditLimit(),
+                                                        command.maxDiscountRate(),
+                                                        command.vatSubject() == null ? false : command.vatSubject(),
+                                                        command.operationsBalance(),
+                                                        command.openingBalance(),
+                                                        command.payTermNumber(),
+                                                        command.payTermType(),
+                                                        command.thirdPartyFamily(),
+                                                        command.classification(),
+                                                        command.taxNumber());
                                         Mono<Void> duplicateReferenceCheck = existing.referenceCode()
                                                         .equalsIgnoreCase(updated.referenceCode())
                                                                         ? Mono.empty()
@@ -716,7 +758,9 @@ public class ThirdPartyApplicationService implements CreateThirdPartyUseCase, Ge
                 }
                 String normalized = query.toUpperCase();
                 return thirdParty.referenceCode().contains(normalized)
-                                || thirdParty.displayName().toUpperCase().contains(normalized);
+                                || thirdParty.displayName().toUpperCase().contains(normalized)
+                                || (thirdParty.longName() != null && thirdParty.longName().toUpperCase().contains(normalized))
+                                || (thirdParty.acronym() != null && thirdParty.acronym().toUpperCase().contains(normalized));
         }
 
         private ThirdPartySearchResult toSearchResult(ThirdParty thirdParty) {
@@ -726,14 +770,16 @@ public class ThirdPartyApplicationService implements CreateThirdPartyUseCase, Ge
                                 thirdParty.organizationId(),
                                 thirdParty.partyRef().partyType(),
                                 thirdParty.partyRef().partyId(),
-                                thirdParty.referenceCode(),
-                                thirdParty.displayName(),
+                                thirdParty.code(),
+                                thirdParty.name(),
+                                thirdParty.type(),
+                                thirdParty.longName(),
                                 thirdParty.roles(),
                                 thirdParty.prospect(),
                                 thirdParty.accountingAccount(),
                                 thirdParty.segment(),
                                 thirdParty.qualificationScore(),
-                                thirdParty.active(),
+                                thirdParty.enabled(),
                                 thirdParty.lastContactedAt(),
                                 thirdParty.nextFollowUpAt(),
                                 thirdParty.followUpStatus(),
@@ -764,7 +810,16 @@ public class ThirdPartyApplicationService implements CreateThirdPartyUseCase, Ge
                                 qualified.roles(), qualified.prospect(), qualified.accountingAccount(),
                                 qualified.segment(),
                                 qualified.qualificationScore(), qualified.active(), qualified.lastContactedAt(),
-                                qualified.nextFollowUpAt(), qualified.followUpStatus(), qualified.convertedAt());
+                                qualified.nextFollowUpAt(), qualified.followUpStatus(), qualified.convertedAt(),
+                                qualified.type(), qualified.legalForm(), qualified.uniqueIdentificationNumber(),
+                                qualified.tradeRegistrationNumber(), qualified.name(), qualified.acronym(),
+                                qualified.longName(), qualified.logoUri(), qualified.logoId(),
+                                qualified.accountingAccountNumbers(), qualified.authorizedPaymentMethods(),
+                                qualified.authorizedCreditLimit(), qualified.maxDiscountRate(), qualified.vatSubject(),
+                                qualified.operationsBalance(), qualified.openingBalance(), qualified.payTermNumber(),
+                                qualified.payTermType(), qualified.thirdPartyFamily(), qualified.classification(),
+                                qualified.taxNumber(), qualified.loyaltyPoints(), qualified.loyaltyPointsUsed(),
+                                qualified.loyaltyPointsExpired(), qualified.deletedAt());
         }
 
         private boolean isAutoManagedQualification(ThirdParty thirdParty) {
@@ -803,8 +858,12 @@ public class ThirdPartyApplicationService implements CreateThirdPartyUseCase, Ge
         private BusinessEvent thirdPartyEvent(String eventType, ThirdParty thirdParty) {
                 return BusinessEvent.now(thirdParty.tenantId(), thirdParty.organizationId(), eventType,
                                 "THIRD_PARTY", thirdParty.id(), payload(
+                                                "code", thirdParty.code(),
                                                 "referenceCode", thirdParty.referenceCode(),
+                                                "name", thirdParty.name(),
                                                 "displayName", thirdParty.displayName(),
+                                                "type", thirdParty.type(),
+                                                "longName", thirdParty.longName(),
                                                 "roles", thirdParty.roles(),
                                                 "prospect", thirdParty.prospect(),
                                                 "partyType", thirdParty.partyRef().partyType().name(),
@@ -815,7 +874,9 @@ public class ThirdPartyApplicationService implements CreateThirdPartyUseCase, Ge
                                                 "lastContactedAt", thirdParty.lastContactedAt(),
                                                 "nextFollowUpAt", thirdParty.nextFollowUpAt(),
                                                 "followUpStatus", thirdParty.followUpStatus(),
+                                                "enabled", thirdParty.enabled(),
                                                 "active", thirdParty.active(),
+                                                "classification", thirdParty.classification(),
                                                 "convertedAt", thirdParty.convertedAt()));
         }
 

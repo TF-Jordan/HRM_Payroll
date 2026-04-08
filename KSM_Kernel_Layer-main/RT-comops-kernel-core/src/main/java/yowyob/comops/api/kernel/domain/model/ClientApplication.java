@@ -1,8 +1,11 @@
 package yowyob.comops.api.kernel.domain.model;
 
+import yowyob.comops.api.common.domain.model.PlatformServiceCode;
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 public final class ClientApplication {
@@ -16,6 +19,7 @@ public final class ClientApplication {
     private final String secretHash;
     private final ClientApplicationStatus status;
     private final boolean systemManaged;
+    private final Set<String> allowedServiceCodes;
     private final Instant lastAuthenticatedAt;
     private final Instant secretRotatedAt;
 
@@ -29,6 +33,7 @@ public final class ClientApplication {
             String secretHash,
             ClientApplicationStatus status,
             boolean systemManaged,
+            Set<String> allowedServiceCodes,
             Instant lastAuthenticatedAt,
             Instant secretRotatedAt) {
         this.id = Objects.requireNonNull(id, "id is required");
@@ -40,6 +45,7 @@ public final class ClientApplication {
         this.secretHash = requireText(secretHash, "secretHash");
         this.status = Objects.requireNonNull(status, "status is required");
         this.systemManaged = systemManaged;
+        this.allowedServiceCodes = normalizeAllowedServiceCodes(allowedServiceCodes);
         this.lastAuthenticatedAt = lastAuthenticatedAt;
         this.secretRotatedAt = secretRotatedAt == null ? updatedAt : secretRotatedAt;
     }
@@ -49,6 +55,7 @@ public final class ClientApplication {
             String name,
             String description,
             String secretHash,
+            Set<String> allowedServiceCodes,
             boolean systemManaged) {
         Instant now = Instant.now();
         return new ClientApplication(
@@ -61,6 +68,7 @@ public final class ClientApplication {
                 secretHash,
                 ClientApplicationStatus.ACTIVE,
                 systemManaged,
+                allowedServiceCodes,
                 null,
                 now);
     }
@@ -75,10 +83,11 @@ public final class ClientApplication {
             String secretHash,
             ClientApplicationStatus status,
             boolean systemManaged,
+            Set<String> allowedServiceCodes,
             Instant lastAuthenticatedAt,
             Instant secretRotatedAt) {
         return new ClientApplication(id, createdAt, updatedAt, clientId, name, description, secretHash, status,
-                systemManaged, lastAuthenticatedAt, secretRotatedAt);
+                systemManaged, allowedServiceCodes, lastAuthenticatedAt, secretRotatedAt);
     }
 
     public UUID id() {
@@ -117,6 +126,10 @@ public final class ClientApplication {
         return systemManaged;
     }
 
+    public Set<String> allowedServiceCodes() {
+        return allowedServiceCodes;
+    }
+
     public Instant lastAuthenticatedAt() {
         return lastAuthenticatedAt;
     }
@@ -129,31 +142,38 @@ public final class ClientApplication {
         return status == ClientApplicationStatus.ACTIVE;
     }
 
-    public ClientApplication updateDefinition(String name, String description, boolean systemManaged) {
+    public boolean canAccessService(String serviceCode) {
+        return allowedServiceCodes.contains(PlatformServiceCode.from(serviceCode).code());
+    }
+
+    public ClientApplication updateDefinition(String name, String description, Set<String> allowedServiceCodes,
+            boolean systemManaged) {
         return new ClientApplication(id, createdAt, Instant.now(), clientId, name, description, secretHash, status,
-                systemManaged, lastAuthenticatedAt, secretRotatedAt);
+                systemManaged, allowedServiceCodes, lastAuthenticatedAt, secretRotatedAt);
     }
 
     public ClientApplication rotateSecret(String secretHash) {
         Instant now = Instant.now();
         return new ClientApplication(id, createdAt, now, clientId, name, description, secretHash,
-                ClientApplicationStatus.ACTIVE, systemManaged, lastAuthenticatedAt, now);
+                ClientApplicationStatus.ACTIVE, systemManaged, allowedServiceCodes, lastAuthenticatedAt, now);
     }
 
     public ClientApplication markAuthenticated() {
         Instant now = Instant.now();
         return new ClientApplication(id, createdAt, now, clientId, name, description, secretHash, status,
-                systemManaged, now, secretRotatedAt);
+                systemManaged, allowedServiceCodes, now, secretRotatedAt);
     }
 
     public ClientApplication revoke() {
         return new ClientApplication(id, createdAt, Instant.now(), clientId, name, description, secretHash,
-                ClientApplicationStatus.REVOKED, systemManaged, lastAuthenticatedAt, secretRotatedAt);
+                ClientApplicationStatus.REVOKED, systemManaged, allowedServiceCodes, lastAuthenticatedAt,
+                secretRotatedAt);
     }
 
     public ClientApplication activate() {
         return new ClientApplication(id, createdAt, Instant.now(), clientId, name, description, secretHash,
-                ClientApplicationStatus.ACTIVE, systemManaged, lastAuthenticatedAt, secretRotatedAt);
+                ClientApplicationStatus.ACTIVE, systemManaged, allowedServiceCodes, lastAuthenticatedAt,
+                secretRotatedAt);
     }
 
     private static String requireText(String value, String field) {
@@ -172,5 +192,20 @@ public final class ClientApplication {
             return null;
         }
         return value.trim();
+    }
+
+    private static Set<String> normalizeAllowedServiceCodes(Set<String> allowedServiceCodes) {
+        Set<String> requestedServices = allowedServiceCodes == null || allowedServiceCodes.isEmpty()
+                ? new LinkedHashSet<>(PlatformServiceCode.catalog().stream().map(PlatformServiceCode::code).toList())
+                : new LinkedHashSet<>(allowedServiceCodes);
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
+        requestedServices.stream()
+                .map(PlatformServiceCode::from)
+                .map(PlatformServiceCode::code)
+                .forEach(normalized::add);
+        if (normalized.isEmpty()) {
+            throw new IllegalArgumentException("allowedServiceCodes must not be empty");
+        }
+        return Set.copyOf(normalized);
     }
 }

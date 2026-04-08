@@ -2,6 +2,7 @@ package yowyob.comops.api.organization.adapter.out.persistence;
 
 import yowyob.comops.api.organization.application.port.out.OrganizationRepository;
 import yowyob.comops.api.organization.domain.model.Organization;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -51,7 +52,13 @@ public class OrganizationR2dbcRepositoryAdapter implements OrganizationRepositor
         return repository.save(new OrganizationEntity(organization.id(), organization.tenantId(), organization.createdAt(),
                 organization.updatedAt(), organization.businessActorId(), organization.governanceStatus().name(),
                 organization.governedByUserId(), organization.governedAt(), organization.governanceReason(),
-                organization.code(), organization.legalName(), organization.displayName(),
+                organization.code(), organization.service(), organization.isIndividualBusiness(), organization.email(),
+                organization.shortName(), organization.longName(), organization.description(), organization.logoUri(),
+                organization.logoId(), organization.websiteUrl(), organization.socialNetwork(),
+                organization.businessRegistrationNumber(), organization.taxNumber(), organization.capitalShare(),
+                organization.ceoName(), organization.yearFounded(), organization.keywords(),
+                organization.numberOfEmployees(), organization.legalForm(), organization.isActive(),
+                organization.status(), organization.deletedAt(), organization.legalName(), organization.displayName(),
                 organization.organizationType())).map(this::toDomain);
     }
 
@@ -63,7 +70,19 @@ public class OrganizationR2dbcRepositoryAdapter implements OrganizationRepositor
     private Organization toDomain(OrganizationEntity entity) {
         return Organization.rehydrate(entity.id(), entity.tenantId(), entity.createdAt(), entity.updatedAt(),
                 entity.businessActorId(), entity.governanceStatus(), entity.governedByUserId(), entity.governedAt(),
-                entity.governanceReason(), entity.code(), entity.legalName(), entity.displayName(),
-                entity.organizationType());
+                entity.governanceReason(), entity.code(), firstNonBlank(entity.service(), entity.organizationType()),
+                entity.isIndividualBusiness(), entity.email(), firstNonBlank(entity.shortName(), entity.displayName()),
+                firstNonBlank(entity.longName(), entity.legalName()), entity.description(), entity.logoUri(),
+                entity.logoId(), entity.websiteUrl(), entity.socialNetwork(), entity.businessRegistrationNumber(),
+                entity.taxNumber(), entity.capitalShare(), entity.ceoName(), entity.yearFounded(),
+                entity.keywords() == null ? Set.of() : entity.keywords(), entity.numberOfEmployees(),
+                entity.legalForm(), entity.isActive(), entity.status(), entity.deletedAt());
+    }
+
+    private String firstNonBlank(String primary, String fallback) {
+        if (primary != null && !primary.isBlank()) {
+            return primary;
+        }
+        return fallback;
     }
 }

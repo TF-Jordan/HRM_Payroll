@@ -30,13 +30,13 @@ public class ElasticsearchOrganizationSearchGateway implements OrganizationSearc
         List<Query> mustClauses = new ArrayList<>();
         filters.add(ElasticsearchQuerySupport.term("tenantId", tenantId.toString()));
         if (ElasticsearchQuerySupport.hasText(organizationType)) {
-            filters.add(ElasticsearchQuerySupport.term("organizationType", organizationType.trim().toUpperCase()));
+            filters.add(ElasticsearchQuerySupport.term("service", organizationType.trim().toUpperCase()));
         }
         if (ElasticsearchQuerySupport.hasText(query)) {
             String normalized = query.trim();
             mustClauses.add(ElasticsearchQuerySupport.should(
-                    ElasticsearchQuerySupport.match("displayName", normalized),
-                    ElasticsearchQuerySupport.match("legalName", normalized),
+                    ElasticsearchQuerySupport.match("shortName", normalized),
+                    ElasticsearchQuerySupport.match("longName", normalized),
                     ElasticsearchQuerySupport.term("code", normalized.toUpperCase())));
         }
         return operations.search(
@@ -53,8 +53,11 @@ public class ElasticsearchOrganizationSearchGateway implements OrganizationSearc
                 source.tenantId(),
                 source.businessActorId(),
                 source.code(),
-                source.legalName(),
-                source.displayName(),
-                source.organizationType());
+                source.service(),
+                source.shortName(),
+                source.longName(),
+                source.legalForm(),
+                source.isActive(),
+                source.status());
     }
 }

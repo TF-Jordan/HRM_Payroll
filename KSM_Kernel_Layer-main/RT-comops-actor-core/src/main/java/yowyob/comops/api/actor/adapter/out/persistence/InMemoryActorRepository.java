@@ -1,4 +1,5 @@
 package yowyob.comops.api.actor.adapter.out.persistence;
+
 import yowyob.comops.api.actor.application.port.out.ActorRepository;
 import yowyob.comops.api.actor.domain.model.Actor;
 import java.util.Map;
