@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice(assignableTypes = {EmployeeController.class, ContractController.class,
-        DependentController.class, LoanAdvanceController.class})
+        DependentController.class, LoanAdvanceController.class, LeaveRequestController.class,
+        PayrollRunController.class, TrainingController.class, PerformanceReviewController.class})
 public class HrmExceptionHandler {
 
     @ExceptionHandler(DuplicateRegistrationNumberException.class)
