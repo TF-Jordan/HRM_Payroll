@@ -5,6 +5,7 @@ import yowyob.comops.api.hrm.application.port.in.CreatePayrollRunCommand;
 import yowyob.comops.api.hrm.application.port.in.CreatePayrollRunUseCase;
 import yowyob.comops.api.hrm.application.port.in.GetPayrollRunUseCase;
 import yowyob.comops.api.hrm.application.port.in.ValidatePayrollRunUseCase;
+import yowyob.comops.api.hrm.application.service.PayrollCalculationService;
 import yowyob.comops.api.kernel.application.service.ReactiveRequestContextHolder;
 import jakarta.validation.Valid;
 
@@ -32,13 +33,16 @@ public class PayrollRunController {
     private final CreatePayrollRunUseCase createPayrollRunUseCase;
     private final GetPayrollRunUseCase getPayrollRunUseCase;
     private final ValidatePayrollRunUseCase validatePayrollRunUseCase;
+    private final PayrollCalculationService payrollCalculationService;
 
     public PayrollRunController(CreatePayrollRunUseCase createPayrollRunUseCase,
                                 GetPayrollRunUseCase getPayrollRunUseCase,
-                                ValidatePayrollRunUseCase validatePayrollRunUseCase) {
+                                ValidatePayrollRunUseCase validatePayrollRunUseCase,
+                                PayrollCalculationService payrollCalculationService) {
         this.createPayrollRunUseCase = createPayrollRunUseCase;
         this.getPayrollRunUseCase = getPayrollRunUseCase;
         this.validatePayrollRunUseCase = validatePayrollRunUseCase;
+        this.payrollCalculationService = payrollCalculationService;
     }
 
     @PostMapping
@@ -86,5 +90,37 @@ public class PayrollRunController {
                         context.userId()))
                 .map(PayrollRunResponse::from)
                 .map(response -> ResponseEntity.ok(ApiResponse.success(response, "Payroll run validated.")));
+    }
+
+    @PostMapping("/{payrollRunId}/calculate")
+    @PreAuthorize("@businessAccessPolicy.hasPermission(authentication, 'hrm:write')")
+    public Mono<ResponseEntity<ApiResponse<PayrollRunResponse>>> calculatePayroll(
+            @PathVariable("payrollRunId") UUID payrollRunId) {
+        return payrollCalculationService.calculatePayroll(payrollRunId)
+                .map(PayrollRunResponse::from)
+                .map(response -> ResponseEntity.ok(ApiResponse.success(response, "Payroll calculated.")));
+    }
+
+    @GetMapping("/{payrollRunId}/entries")
+    public Mono<ResponseEntity<ApiResponse<List<PayrollEntryResponse>>>> getPayrollEntries(
+            @PathVariable("payrollRunId") UUID payrollRunId) {
+        return ReactiveRequestContextHolder.getRequiredContext()
+                .flatMapMany(context -> payrollCalculationService.getPayrollEntries(
+                        context.tenantId(), payrollRunId))
+                .map(PayrollEntryResponse::from)
+                .collectList()
+                .map(response -> ResponseEntity.ok(ApiResponse.success(response, "Payroll entries fetched.")));
+    }
+
+    @GetMapping("/{payrollRunId}/entries/{entryId}/lines")
+    public Mono<ResponseEntity<ApiResponse<List<PayslipLineResponse>>>> getPayslipLines(
+            @PathVariable("payrollRunId") UUID payrollRunId,
+            @PathVariable("entryId") UUID entryId) {
+        return ReactiveRequestContextHolder.getRequiredContext()
+                .flatMapMany(context -> payrollCalculationService.getPayslipLines(
+                        context.tenantId(), entryId))
+                .map(PayslipLineResponse::from)
+                .collectList()
+                .map(response -> ResponseEntity.ok(ApiResponse.success(response, "Payslip lines fetched.")));
     }
 }
