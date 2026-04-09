@@ -86,6 +86,37 @@ public class PayrollApplicationService implements CreatePayrollRunUseCase, GetPa
                         "employeeCount", payrollRun.employeeCount()));
     }
 
+    public Mono<PayrollRun> markPaid(UUID payrollRunId) {
+        return transactionalExecutor.transactional(
+                payrollRunRepository.findById(payrollRunId)
+                        .switchIfEmpty(Mono.error(new PayrollRunNotFoundException(payrollRunId)))
+                        .map(PayrollRun::markPaid)
+                        .flatMap(payrollRunRepository::save)
+                        .flatMap(paid -> businessEventPublisher.publish(payrollPaidEvent(paid))
+                                .then(businessEventPublisher.publish(paymentOrderCreatedEvent(paid)))
+                                .thenReturn(paid)));
+    }
+
+    private BusinessEvent payrollPaidEvent(PayrollRun payrollRun) {
+        return BusinessEvent.now(payrollRun.tenantId(), payrollRun.organizationId(),
+                "PAYROLL_PAID", "PAYROLL_RUN", payrollRun.id(), payload(
+                        "period", payrollRun.period(),
+                        "totalNet", payrollRun.totalNet(),
+                        "currency", payrollRun.currency(),
+                        "employeeCount", payrollRun.employeeCount()));
+    }
+
+    private BusinessEvent paymentOrderCreatedEvent(PayrollRun payrollRun) {
+        return BusinessEvent.now(payrollRun.tenantId(), payrollRun.organizationId(),
+                "PAYMENT_ORDER_CREATED", "PAYROLL_RUN", payrollRun.id(), payload(
+                        "sourceModule", "hrm-core",
+                        "period", payrollRun.period(),
+                        "amount", payrollRun.totalNet(),
+                        "currency", payrollRun.currency(),
+                        "description", "Payroll payment for period " + payrollRun.period(),
+                        "employeeCount", payrollRun.employeeCount()));
+    }
+
     private Map<String, Object> payload(Object... entries) {
         Map<String, Object> payload = new LinkedHashMap<>();
         for (int index = 0; index < entries.length; index += 2) {

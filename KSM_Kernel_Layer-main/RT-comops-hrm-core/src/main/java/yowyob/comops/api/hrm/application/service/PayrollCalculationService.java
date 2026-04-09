@@ -17,9 +17,13 @@ import yowyob.comops.api.hrm.domain.model.PayslipLine;
 import yowyob.comops.api.hrm.domain.service.CameroonPayrollCalculator;
 import yowyob.comops.api.hrm.domain.service.PayrollCalculationResult;
 import yowyob.comops.api.hrm.domain.service.PayslipLineData;
+import yowyob.comops.api.kernel.application.port.out.BusinessEventPublisher;
 import yowyob.comops.api.kernel.application.port.out.ReactiveTransactionalExecutor;
+import yowyob.comops.api.kernel.domain.model.BusinessEvent;
 
 import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -36,6 +40,7 @@ public class PayrollCalculationService {
     private final ContractRepository contractRepository;
     private final DependentRepository dependentRepository;
     private final LoanAdvanceRepository loanAdvanceRepository;
+    private final BusinessEventPublisher businessEventPublisher;
     private final ReactiveTransactionalExecutor transactionalExecutor;
 
     public PayrollCalculationService(PayrollRunRepository payrollRunRepository,
@@ -45,6 +50,7 @@ public class PayrollCalculationService {
                                      ContractRepository contractRepository,
                                      DependentRepository dependentRepository,
                                      LoanAdvanceRepository loanAdvanceRepository,
+                                     BusinessEventPublisher businessEventPublisher,
                                      ReactiveTransactionalExecutor transactionalExecutor) {
         this.payrollRunRepository = payrollRunRepository;
         this.payrollEntryRepository = payrollEntryRepository;
@@ -53,6 +59,7 @@ public class PayrollCalculationService {
         this.contractRepository = contractRepository;
         this.dependentRepository = dependentRepository;
         this.loanAdvanceRepository = loanAdvanceRepository;
+        this.businessEventPublisher = businessEventPublisher;
         this.transactionalExecutor = transactionalExecutor;
     }
 
@@ -90,7 +97,9 @@ public class PayrollCalculationService {
 
                     PayrollRun calculated = run.markCalculated(totalGross, totalNet,
                             totalEmployerCharges, employeeCount);
-                    return payrollRunRepository.save(calculated);
+                    return payrollRunRepository.save(calculated)
+                            .flatMap(saved -> businessEventPublisher.publish(payrollCalculatedEvent(saved))
+                                    .thenReturn(saved));
                 });
     }
 
@@ -144,6 +153,18 @@ public class PayrollCalculationService {
                     return loanAdvanceRepository.save(repaid);
                 })
                 .then();
+    }
+
+    private BusinessEvent payrollCalculatedEvent(PayrollRun payrollRun) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("period", payrollRun.period());
+        payload.put("totalGross", payrollRun.totalGross());
+        payload.put("totalNet", payrollRun.totalNet());
+        payload.put("totalEmployerCharges", payrollRun.totalEmployerCharges());
+        payload.put("currency", payrollRun.currency());
+        payload.put("employeeCount", payrollRun.employeeCount());
+        return BusinessEvent.now(payrollRun.tenantId(), payrollRun.organizationId(),
+                "PAYROLL_CALCULATED", "PAYROLL_RUN", payrollRun.id(), payload);
     }
 
     public Flux<PayrollEntry> getPayrollEntries(UUID tenantId, UUID payrollRunId) {

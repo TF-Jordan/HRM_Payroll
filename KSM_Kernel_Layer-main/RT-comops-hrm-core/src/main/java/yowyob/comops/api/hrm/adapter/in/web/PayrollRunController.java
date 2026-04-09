@@ -5,6 +5,7 @@ import yowyob.comops.api.hrm.application.port.in.CreatePayrollRunCommand;
 import yowyob.comops.api.hrm.application.port.in.CreatePayrollRunUseCase;
 import yowyob.comops.api.hrm.application.port.in.GetPayrollRunUseCase;
 import yowyob.comops.api.hrm.application.port.in.ValidatePayrollRunUseCase;
+import yowyob.comops.api.hrm.application.service.PayrollApplicationService;
 import yowyob.comops.api.hrm.application.service.PayrollCalculationService;
 import yowyob.comops.api.kernel.application.service.ReactiveRequestContextHolder;
 import jakarta.validation.Valid;
@@ -33,15 +34,18 @@ public class PayrollRunController {
     private final CreatePayrollRunUseCase createPayrollRunUseCase;
     private final GetPayrollRunUseCase getPayrollRunUseCase;
     private final ValidatePayrollRunUseCase validatePayrollRunUseCase;
+    private final PayrollApplicationService payrollApplicationService;
     private final PayrollCalculationService payrollCalculationService;
 
     public PayrollRunController(CreatePayrollRunUseCase createPayrollRunUseCase,
                                 GetPayrollRunUseCase getPayrollRunUseCase,
                                 ValidatePayrollRunUseCase validatePayrollRunUseCase,
+                                PayrollApplicationService payrollApplicationService,
                                 PayrollCalculationService payrollCalculationService) {
         this.createPayrollRunUseCase = createPayrollRunUseCase;
         this.getPayrollRunUseCase = getPayrollRunUseCase;
         this.validatePayrollRunUseCase = validatePayrollRunUseCase;
+        this.payrollApplicationService = payrollApplicationService;
         this.payrollCalculationService = payrollCalculationService;
     }
 
@@ -90,6 +94,15 @@ public class PayrollRunController {
                         context.userId()))
                 .map(PayrollRunResponse::from)
                 .map(response -> ResponseEntity.ok(ApiResponse.success(response, "Payroll run validated.")));
+    }
+
+    @PostMapping("/{payrollRunId}/mark-paid")
+    @PreAuthorize("@businessAccessPolicy.hasPermission(authentication, 'hrm:write')")
+    public Mono<ResponseEntity<ApiResponse<PayrollRunResponse>>> markPaid(
+            @PathVariable("payrollRunId") UUID payrollRunId) {
+        return payrollApplicationService.markPaid(payrollRunId)
+                .map(PayrollRunResponse::from)
+                .map(response -> ResponseEntity.ok(ApiResponse.success(response, "Payroll run marked as paid.")));
     }
 
     @PostMapping("/{payrollRunId}/calculate")
