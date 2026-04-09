@@ -1,5 +1,5 @@
 -- =============================================================================
--- V27: HRM Core — Human Resource Management & Payroll
+-- V34: HRM Core — Human Resource Management & Payroll
 -- =============================================================================
 
 CREATE SCHEMA IF NOT EXISTS hrm;

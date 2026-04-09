@@ -35,6 +35,7 @@
     <module>RT-comops-accounting-core</module>
     <module>RT-comops-treasury-core</module>
     <module>RT-comops-file-core</module>
+    <module>RT-comops-hrm-core</module>
     <module>RT-comops-bootstrap</module>
   </modules>
 
