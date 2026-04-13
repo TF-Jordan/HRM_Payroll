@@ -10,6 +10,9 @@ actor "Employé" as employe
 actor "Comptable / DAF" as comptable
 actor "Recruteur" as recruteur
 actor "DRH" as drh
+actor "Responsable Paie" as resp_paie
+actor "Médecin du travail" as medecin
+actor "Contrôleur RH" as ctrlrh
 
 rectangle "hrm-core" {
 
@@ -47,13 +50,46 @@ rectangle "hrm-core" {
         usecase "Réaliser une\névaluation" as UC_REVIEW
     }
 
+    package "Recrutement & Onboarding" {
+        usecase "Publier une\noffre" as UC_JOB_POST
+        usecase "Gérer les\ncandidatures" as UC_APPLICATION
+        usecase "Planifier les\nentretiens" as UC_INTERVIEW
+        usecase "Finaliser\nl'onboarding" as UC_ONBOARD
+    }
+
+    package "Temps & Présences" {
+        usecase "Saisir/importer\nles pointages" as UC_TIME_CAPTURE
+        usecase "Valider les\nheures variables" as UC_TIME_VALIDATE
+    }
+
+    package "Missions & Frais" {
+        usecase "Créer un ordre\nde mission" as UC_MISSION
+        usecase "Soumettre une\nnote de frais" as UC_EXPENSE_SUBMIT
+        usecase "Approuver / rembourser\nune note de frais" as UC_EXPENSE_APPROVE
+    }
+
+    package "Santé au travail" {
+        usecase "Enregistrer une\nvisite médicale" as UC_MED_VISIT
+        usecase "Suivre les certificats\nobligatoires" as UC_MED_CERT
+    }
+
+    package "Compétences & GPEC" {
+        usecase "Maintenir le référentiel\nde compétences" as UC_SKILL_REF
+        usecase "Évaluer les écarts\nde compétences" as UC_SKILL_GAP
+        usecase "Piloter le budget\nformation" as UC_TRAINING_BUDGET
+    }
+
+    package "Pilotage RH" {
+        usecase "Consulter les KPI RH\n(turnover, absentéisme...)" as UC_KPI
+        usecase "Exporter les\nreportings RH" as UC_RH_REPORT
+    }
+
     package "Conformité" {
         usecase "Consulter les alertes\nde conformité" as UC_COMPLIANCE
         usecase "Consulter les CDD\nexpirants" as UC_CDD_EXPIRY
     }
 }
 
-' --- Relations Admin RH ---
 adminrh --> UC_EMP_CREATE
 adminrh --> UC_EMP_UPDATE
 adminrh --> UC_EMP_TERMINATE
@@ -64,45 +100,64 @@ adminrh --> UC_CNPS
 adminrh --> UC_COMPLIANCE
 adminrh --> UC_CDD_EXPIRY
 
-' --- Relations Comptable ---
 comptable --> UC_PAYROLL_VALIDATE
 comptable --> UC_PAYMENT_ORDER
 comptable --> UC_PAYROLL_READ
 comptable --> UC_LOAN_APPROVE
+comptable --> UC_EXPENSE_APPROVE
 
-' --- Relations Manager ---
 manager --> UC_LEAVE_APPROVE
 manager --> UC_LEAVE_PLANNING
 manager --> UC_REVIEW
+manager --> UC_TIME_VALIDATE
+manager --> UC_MISSION
+manager --> UC_SKILL_GAP
 
-' --- Relations Employé ---
 employe --> UC_LEAVE_SUBMIT
 employe --> UC_LEAVE_BALANCE
 employe --> UC_PAYROLL_READ
 employe --> UC_LOAN_REQUEST
 employe --> UC_TRAINING_ENROLL
+employe --> UC_TIME_CAPTURE
+employe --> UC_EXPENSE_SUBMIT
 
-' --- Relations DRH ---
 drh --> UC_TRAINING_PLAN
 drh --> UC_REVIEW
 drh --> UC_COMPLIANCE
+drh --> UC_SKILL_REF
+drh --> UC_TRAINING_BUDGET
+drh --> UC_KPI
 
-' --- Relations Recruteur ---
 recruteur --> UC_EMP_CREATE
+recruteur --> UC_JOB_POST
+recruteur --> UC_APPLICATION
+recruteur --> UC_INTERVIEW
+recruteur --> UC_ONBOARD
 
-' --- Acteurs externes (autres cores) ---
+resp_paie --> UC_TIME_VALIDATE
+resp_paie --> UC_CNPS
+
+medecin --> UC_MED_VISIT
+medecin --> UC_MED_CERT
+
+ctrlrh --> UC_KPI
+ctrlrh --> UC_RH_REPORT
+
 rectangle "accounting-core" as ACC <<external>>
 rectangle "treasury-core" as TRE <<external>>
 rectangle "actor-core" as ACT <<external>>
 rectangle "settings-core" as SET <<external>>
 rectangle "file-core" as FIL <<external>>
 rectangle "roles-core" as ROL <<external>>
+rectangle "resource-core" as RES <<external>>
 
 UC_PAYROLL_VALIDATE ..> ACC : <<événement>>\nPAYROLL_VALIDATED
 UC_PAYMENT_ORDER ..> TRE : <<événement>>\nPAYMENT_ORDER_CREATED
 UC_EMP_CREATE ..> ACT : <<port/out>>\nrésolution PartyRef
 UC_PAYROLL_RUN ..> SET : <<port/out>>\nlecture paramètres paie
 UC_CONTRACT ..> FIL : <<port/out>>\nstockage documents
+UC_EXPENSE_SUBMIT ..> FIL : <<port/out>>\njustificatifs de frais
+UC_TIME_CAPTURE ..> RES : <<intégration>>\nbadgeuse / planning
 
 note bottom of ROL
   roles-core gère toute
