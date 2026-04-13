@@ -277,6 +277,170 @@ entity "hrm_review_objective" as ro {
     commentaire : TEXT
 }
 
+
+
+entity "hrm_job_offer" as jo {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * organization_id : UUID
+    * title : VARCHAR(150)
+    * department_code : VARCHAR(20)
+    * status : VARCHAR(20)
+    publication_date : DATE
+    closing_date : DATE
+}
+
+entity "hrm_application" as app {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * job_offer_id : UUID <<FK>>
+    * candidate_party_id : UUID
+    * status : VARCHAR(20)
+    cv_file_id : UUID
+}
+
+entity "hrm_interview" as iv {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * application_id : UUID <<FK>>
+    * interview_type : VARCHAR(20)
+    scheduled_at : TIMESTAMPTZ
+    result : VARCHAR(20)
+}
+
+entity "hrm_onboarding_task" as ob {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * application_id : UUID <<FK>>
+    * employee_id : UUID <<FK>>
+    * label : VARCHAR(120)
+    * status : VARCHAR(20)
+}
+
+entity "hrm_timesheet" as ts {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * employee_id : UUID <<FK>>
+    * period : VARCHAR(7)
+    * normal_hours : NUMERIC(8,2)
+    overtime_hours : NUMERIC(8,2)
+    * status : VARCHAR(20)
+}
+
+entity "hrm_attendance_event" as atd {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * employee_id : UUID <<FK>>
+    * event_time : TIMESTAMPTZ
+    * event_type : VARCHAR(10)
+    source : VARCHAR(20)
+}
+
+entity "hrm_expense_report" as exr {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * employee_id : UUID <<FK>>
+    mission_order_id : UUID <<FK>>
+    * status : VARCHAR(20)
+    * total_amount : NUMERIC(15,2)
+}
+
+entity "hrm_expense_line" as exl {
+    * **id** : UUID <<PK>>
+    --
+    * report_id : UUID <<FK>>
+    * expense_date : DATE
+    * category : VARCHAR(40)
+    * amount : NUMERIC(15,2)
+    receipt_file_id : UUID
+}
+
+entity "hrm_mission_order" as mo {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * employee_id : UUID <<FK>>
+    * destination : VARCHAR(150)
+    * start_date : DATE
+    * end_date : DATE
+    * status : VARCHAR(20)
+}
+
+entity "hrm_medical_visit" as mv {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * employee_id : UUID <<FK>>
+    * visit_date : DATE
+    * aptitude_status : VARCHAR(30)
+    next_due_date : DATE
+}
+
+entity "hrm_medical_certificate" as mc {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * employee_id : UUID <<FK>>
+    * certificate_type : VARCHAR(40)
+    * issue_date : DATE
+    expiry_date : DATE
+}
+
+entity "hrm_skill" as sk {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * code : VARCHAR(40)
+    * label : VARCHAR(150)
+    * family : VARCHAR(80)
+}
+
+entity "hrm_employee_skill" as esk {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * employee_id : UUID <<FK>>
+    * skill_id : UUID <<FK>>
+    * level : INT
+}
+
+entity "hrm_training_budget" as tb {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * organization_id : UUID
+    * fiscal_year : INT
+    * amount_allocated : NUMERIC(15,2)
+    * amount_committed : NUMERIC(15,2)
+}
+
+entity "hrm_social_declaration" as sd {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * declaration_type : VARCHAR(30)
+    * period : VARCHAR(7)
+    * status : VARCHAR(20)
+    file_id : UUID
+}
+
+entity "hrm_rh_kpi_snapshot" as kpi {
+    * **id** : UUID <<PK>>
+    --
+    * tenant_id : UUID
+    * organization_id : UUID
+    * period : VARCHAR(7)
+    * turnover_rate : NUMERIC(8,3)
+    * absenteeism_rate : NUMERIC(8,3)
+}
+
 ' Relations
 emp ||--o{ ctr : employee_id
 emp ||--o{ dep : employee_id
@@ -293,5 +457,25 @@ pe }o--|| emp : employee_id
 tr ||--o{ te : training_id
 
 rv ||--o{ ro : review_id
+
+
+jo ||--o{ app : job_offer_id
+app ||--o{ iv : application_id
+app ||--o{ ob : application_id
+
+emp ||--o{ ts : employee_id
+emp ||--o{ atd : employee_id
+emp ||--o{ exr : employee_id
+emp ||--o{ mo : employee_id
+emp ||--o{ mv : employee_id
+emp ||--o{ mc : employee_id
+emp ||--o{ esk : employee_id
+
+exr ||--o{ exl : report_id
+mo ||--o{ exr : mission_order_id
+
+sk ||--o{ esk : skill_id
+tr }o--|| tb : budget_id (logical)
+pr ||--o{ sd : period (logical)
 
 @enduml

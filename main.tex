@@ -482,6 +482,12 @@ fill=white, rounded corners=2pt
         \item \textbf{Avances et prêts sur salaire} : demande, approbation, déduction automatique sur la paie.
         \item \textbf{Formation et évaluation} : planification des formations, inscription des employés, évaluations de performance avec objectifs pondérés.
         \item \textbf{Conformité} : alertes sur les CDD expirants, suivi de la conformité réglementaire.
+        \item \textbf{Recrutement et onboarding} : publication d'offres, gestion des candidatures, entretiens et parcours d'intégration.
+        \item \textbf{Temps de travail et présences} : pointage, feuilles de temps, heures supplémentaires et alimentation des variables de paie.
+        \item \textbf{Notes de frais et missions} : ordres de mission, notes de frais, justificatifs et remboursement.
+        \item \textbf{Suivi médical} : visites médicales, certificats obligatoires, gestion des échéances.
+        \item \textbf{Compétences, GPEC et budget} : cartographie des compétences, plans de développement et pilotage budgétaire de la formation.
+        \item \textbf{Pilotage RH} : tableaux de bord, indicateurs RH et reporting décisionnel.
     \end{itemize}
 
     \section{Contexte système}
@@ -710,7 +716,10 @@ fill=white, rounded corners=2pt
     Manager      & Approuve ou rejette les demandes de congé de son équipe. Consulte le planning de congés. Réalise les évaluations de performance. \\
     Employé      & Soumet des demandes de congé, consulte son solde. Consulte ses bulletins de paie. Demande des avances sur salaire. S'inscrit aux formations. \\
     DRH          & Planifie les formations. Participe aux évaluations. Consulte les alertes de conformité. \\
-    Recruteur    & Crée un employé (lié à un Actor existant) lors de l'embauche. \\
+    Recruteur    & Gère les offres, candidatures, entretiens et onboarding. \\
+    Responsable Paie & Consolide les variables de temps et produit les déclarations sociales/fiscales. \\
+    Médecin du travail & Enregistre les visites médicales, certificats et restrictions d'aptitude. \\
+    Contrôleur de gestion RH & Analyse les KPI, tableaux de bord et reportings RH. \\
     \bottomrule
         \end{tabularx}
     \end{table}
@@ -1038,6 +1047,200 @@ fill=white, rounded corners=2pt
     \bottomrule
         \end{tabularx}
     \end{table}
+
+
+% ---
+
+    \subsection{Recrutement et onboarding}
+
+    \subsubsection*{UC-16 : Publier une offre d'emploi}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-16 \\
+    \textbf{Nom}         & Publier une offre d'emploi \\
+    \textbf{Acteurs}     & Recruteur, DRH \\
+    \midrule
+    \textbf{Scénario} & Le recruteur crée l'offre (poste, département, localisation, date limite, compétences requises, package salarial indicatif). L'offre passe de \texttt{DRAFT} à \texttt{PUBLISHED} puis peut être \texttt{CLOSED}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-17 : Gérer les candidatures et entretiens}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-17 \\
+    \textbf{Nom}         & Gérer les candidatures et le pipeline d'entretiens \\
+    \textbf{Acteurs}     & Recruteur, Manager \\
+    \midrule
+    \textbf{Scénario} & Les candidatures sont enregistrées, qualifiées, puis planifiées en entretiens (RH, technique, final). Chaque étape met à jour un statut (\texttt{NEW}, \texttt{SHORTLISTED}, \texttt{INTERVIEWING}, \texttt{OFFERED}, \texttt{REJECTED}, \texttt{HIRED}). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-18 : Finaliser l'onboarding}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-18 \\
+    \textbf{Nom}         & Finaliser l'intégration d'un candidat recruté \\
+    \textbf{Acteurs}     & Recruteur, Admin RH \\
+    \midrule
+    \textbf{Scénario} & Le candidat \texttt{HIRED} est converti en employé, le contrat initial est généré, les tâches d'intégration (compte IT, dotation, documents légaux) sont suivies jusqu'au statut \texttt{COMPLETED}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \subsection{Temps, présences et absences horaires}
+
+    \subsubsection*{UC-19 : Saisir / importer les temps de travail}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-19 \\
+    \textbf{Nom}         & Saisir ou importer les pointages/feuilles de temps \\
+    \textbf{Acteurs}     & Employé, Manager, Responsable Paie \\
+    \midrule
+    \textbf{Scénario} & Les heures normales, supplémentaires, nuit et weekend sont saisies ou importées depuis un système de badgeuse. Les anomalies (retard, absence non justifiée) sont calculées automatiquement. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-20 : Valider les temps pour la paie}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-20 \\
+    \textbf{Nom}         & Valider les variables de temps pour alimentation de la paie \\
+    \textbf{Acteurs}     & Manager, Responsable Paie \\
+    \midrule
+    \textbf{Scénario} & Le manager valide les feuilles de son équipe. hrm-core agrège les variables validées (heures sup., absences, primes d'astreinte) et les injecte dans \texttt{PayrollCalculationEngine}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \subsection{Notes de frais et ordres de mission}
+
+    \subsubsection*{UC-21 : Émettre un ordre de mission}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-21 \\
+    \textbf{Nom}         & Créer et approuver un ordre de mission \\
+    \textbf{Acteurs}     & Manager, Admin RH \\
+    \midrule
+    \textbf{Scénario} & La mission précise destination, période, objet, avance éventuelle et centre de coût. Après approbation, le statut passe à \texttt{APPROVED} et peut déclencher une avance via \texttt{treasury-core}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-22 : Soumettre une note de frais}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-22 \\
+    \textbf{Nom}         & Soumettre et rembourser une note de frais \\
+    \textbf{Acteurs}     & Employé, Comptable / DAF \\
+    \midrule
+    \textbf{Scénario} & L'employé déclare des lignes de frais avec justificatifs. Après validation, hrm-core génère l'ordre de remboursement et publie les événements comptables vers \texttt{accounting-core}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \subsection{Suivi médical et conformité HSE}
+
+    \subsubsection*{UC-23 : Enregistrer une visite médicale}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-23 \\
+    \textbf{Nom}         & Enregistrer une visite médicale périodique \\
+    \textbf{Acteurs}     & Médecin du travail, Admin RH \\
+    \midrule
+    \textbf{Scénario} & Saisie de la visite, du résultat d'aptitude (apte, apte avec restrictions, inapte temporaire), du certificat et de la prochaine échéance. Des alertes sont émises avant expiration. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \subsection{Compétences, GPEC et budget formation}
+
+    \subsubsection*{UC-24 : Maintenir la cartographie des compétences}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-24 \\
+    \textbf{Nom}         & Cartographier les compétences et écarts par poste \\
+    \textbf{Acteurs}     & DRH, Manager \\
+    \midrule
+    \textbf{Scénario} & Le système gère le référentiel \texttt{Skill}, les niveaux attendus par poste et les niveaux détenus par employé. Les écarts alimentent automatiquement les plans de développement et la GPEC. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-25 : Piloter le budget formation}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-25 \\
+    \textbf{Nom}         & Planifier et suivre le budget formation \\
+    \textbf{Acteurs}     & DRH, Contrôleur de gestion RH \\
+    \midrule
+    \textbf{Scénario} & Un budget annuel par organisation/agence est défini. Chaque formation engagée consomme le budget (engagé, réalisé, reste à engager) avec contrôle de dépassement et workflow d'arbitrage. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \subsection{Déclarations réglementaires et pilotage RH}
+
+    \subsubsection*{UC-26 : Produire les déclarations sociales et fiscales}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-26 \\
+    \textbf{Nom}         & Générer les déclarations sociales et fiscales obligatoires \\
+    \textbf{Acteurs}     & Responsable Paie, Comptable / DAF \\
+    \midrule
+    \textbf{Scénario} & Après validation de paie, le système produit les jeux de données déclaratifs (CNPS, DIPE, IRPP/CAC) aux formats paramétrés (CSV, XML ou fichier magnétique), historise les versions et la traçabilité d'envoi. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-27 : Consulter les tableaux de bord RH}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-27 \\
+    \textbf{Nom}         & Consulter les indicateurs et tableaux de bord RH \\
+    \textbf{Acteurs}     & DRH, Contrôleur de gestion RH, Direction \\
+    \midrule
+    \textbf{Scénario} & Consultation de KPI (turnover, absentéisme, masse salariale, pyramide des âges, couverture compétences) avec filtres temporels et exports PDF/Excel. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
 
 
 % =============================================================================
@@ -1662,7 +1865,7 @@ fill=white, rounded corners=2pt
 
     \section{Vue d'ensemble}
 
-    Le modèle de données du module \texttt{hrm-core} comprend \textbf{13 tables}, toutes préfixées par \texttt{hrm\_} et stockées dans le schéma PostgreSQL propre à chaque tenant. Toutes les entités (sauf \texttt{hrm\_payslip\_line} et \texttt{hrm\_review\_objective} qui sont des objets valeur allégés) portent les champs d'audit hérités de \texttt{BaseEntity}.
+    Le modèle de données du module \texttt{hrm-core} comprend \textbf{24 tables}, toutes préfixées par \texttt{hrm\_} et stockées dans le schéma PostgreSQL propre à chaque tenant. Toutes les entités (sauf \texttt{hrm\_payslip\_line}, \texttt{hrm\_review\_objective} et \texttt{hrm\_expense\_line} qui sont des objets valeur allégés) portent les champs d'audit hérités de \texttt{BaseEntity}.
 
 % ── MLD très large → A3 paysage
     \insertdiagramAthreeLandscape{mld-hrm}{1.5}{Modèle logique de données de hrm-core}
@@ -1815,7 +2018,9 @@ fill=white, rounded corners=2pt
 
     \subsection{Tables restantes}
 
-    Les tables \texttt{hrm\_leave\_balance}, \texttt{hrm\_leave\_request}, \texttt{hrm\_loan\_advance}, \texttt{hrm\_training}, \texttt{hrm\_training\_enrollment}, \texttt{hrm\_performance\_review} et \texttt{hrm\_review\_objective} suivent les mêmes principes de conception. Leurs colonnes correspondent fidèlement aux attributs des classes de domaine décrits au chapitre 4. Les champs d'audit (\texttt{created\_by}, \texttt{created\_at}, \texttt{updated\_by}, \texttt{updated\_at}, \texttt{version}) sont présents sur toutes les entités sauf les objets valeur (\texttt{hrm\_payslip\_line}, \texttt{hrm\_review\_objective}).
+    Les tables \texttt{hrm\_leave\_balance}, \texttt{hrm\_leave\_request}, \texttt{hrm\_loan\_advance}, \texttt{hrm\_training}, \texttt{hrm\_training\_enrollment}, \texttt{hrm\_performance\_review}, \texttt{hrm\_review\_objective}, \texttt{hrm\_job\_offer}, \texttt{hrm\_application}, \texttt{hrm\_interview}, \texttt{hrm\_onboarding\_task}, \texttt{hrm\_timesheet}, \texttt{hrm\_attendance\_event}, \texttt{hrm\_expense\_report}, \texttt{hrm\_expense\_line}, \texttt{hrm\_mission\_order}, \texttt{hrm\_medical\_visit}, \texttt{hrm\_medical\_certificate}, \texttt{hrm\_skill}, \texttt{hrm\_employee\_skill}, \texttt{hrm\_training\_budget}, \texttt{hrm\_social\_declaration} et \texttt{hrm\_rh\_kpi\_snapshot} suivent les mêmes principes de conception.
+
+    Leurs colonnes correspondent fidèlement aux attributs des classes de domaine décrits au chapitre 4. Les champs d'audit (\texttt{created\_by}, \texttt{created\_at}, \texttt{updated\_by}, \texttt{updated\_at}, \texttt{version}) sont présents sur toutes les entités sauf les objets valeur (\texttt{hrm\_payslip\_line}, \texttt{hrm\_review\_objective}, \texttt{hrm\_expense\_line}).
 
 % ---
 
