@@ -1,0 +1,2243 @@
+% =============================================================================
+% Cahier de Conception — Module hrm-core (Gestion des Ressources Humaines & Paie)
+% Utilise le template RT-Comops Backend (book class)
+% =============================================================================
+%
+% INSTRUCTIONS D'INTÉGRATION :
+%
+% OPTION A — Fichier autonome (ce fichier se compile seul)
+%   → Compilez directement ce fichier .tex
+%
+% OPTION B — Intégration dans le document principal RT-Comops
+%   → Copiez uniquement la partie entre les balises
+%     %%% DÉBUT CONTENU HRM-CORE %%% et %%% FIN CONTENU HRM-CORE %%%
+%   → Collez-la dans un fichier cores/18-hrm-core.tex
+%   → Ajoutez \input{cores/18-hrm-core} dans le document principal
+%     (avant \input{cores/17-conclusion})
+%
+% =============================================================================
+
+\documentclass[a4paper,12pt,openany]{book}
+
+%% ─── Encodage & Langue ────────────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+
+%% ─── Mathématiques ────────────────────────────────────────────────────────────
+\usepackage{amsmath}
+
+%% ─── Typographie ──────────────────────────────────────────────────────────────
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{setspace}
+\setstretch{1.15}
+
+%% ─── Mise en page ─────────────────────────────────────────────────────────────
+\usepackage[a4paper,
+    top=2.5cm, bottom=2.5cm,
+    left=3cm, right=2.5cm,
+    headheight=15pt]{geometry}
+
+%% ─── Couleurs (palette sobre) ─────────────────────────────────────────────────
+\usepackage{xcolor}
+\definecolor{NavyDark}{RGB}{26,58,92}
+\definecolor{GrayDark}{RGB}{60,60,60}
+\definecolor{GrayLight}{RGB}{240,240,240}
+\definecolor{GrayMid}{RGB}{180,180,180}
+\definecolor{AccentLine}{RGB}{90,120,160}
+
+%% ─── TikZ & UML ───────────────────────────────────────────────────────────────
+\usepackage{tikz}
+\usetikzlibrary{
+    shapes.geometric,
+    shapes.multipart,
+    arrows,
+    arrows.meta,
+    positioning,
+    fit,
+    backgrounds,
+    calc,
+    decorations.pathmorphing,
+    matrix
+}
+\usepackage{pgf-umlsd}
+
+%% ─── Styles TikZ globaux ──────────────────────────────────────────────────────
+\tikzstyle{umlclass} = [
+rectangle split, rectangle split parts=3,
+draw=GrayDark, line width=0.5pt,
+rectangle split part fill={GrayLight, white, white},
+minimum width=3.2cm,
+align=left,
+font=\small
+]
+\tikzstyle{umliface} = [
+rectangle split, rectangle split parts=3,
+draw=GrayDark, line width=0.5pt, dashed,
+rectangle split part fill={GrayLight!60, white, white},
+minimum width=3.2cm,
+align=left,
+font=\small
+]
+\tikzstyle{umlabstract} = [
+rectangle split, rectangle split parts=3,
+draw=GrayDark, line width=0.5pt,
+rectangle split part fill={GrayLight, white, white},
+minimum width=3.2cm,
+align=left,
+font=\small\itshape
+]
+\tikzstyle{umlenum} = [
+rectangle split, rectangle split parts=2,
+draw=GrayDark, line width=0.5pt,
+rectangle split part fill={GrayLight!50, white},
+minimum width=2.5cm,
+align=left,
+font=\small
+]
+\tikzstyle{inherit}  = [-{Triangle[open]}, line width=0.6pt, draw=GrayDark]
+\tikzstyle{implement}= [-{Triangle[open]}, line width=0.6pt, draw=GrayDark, dashed]
+\tikzstyle{compose}  = [{Diamond[fill=GrayDark]}-,   line width=0.6pt, draw=GrayDark]
+\tikzstyle{aggregate}= [{Diamond[open]}-,   line width=0.6pt, draw=GrayDark]
+\tikzstyle{assoc}    = [->, line width=0.5pt, draw=GrayDark]
+\tikzstyle{deplink}  = [->, line width=0.5pt, draw=GrayDark, dashed]
+
+\tikzstyle{actor} = [
+rectangle, draw=none,
+align=center, font=\small\bfseries,
+text=GrayDark
+]
+\tikzstyle{usecase} = [
+ellipse, draw=GrayDark, line width=0.5pt,
+minimum width=3cm, minimum height=1cm,
+align=center, font=\small,
+text=GrayDark, fill=white
+]
+\tikzstyle{systembox} = [
+rectangle, draw=AccentLine, line width=0.8pt,
+fill=white, rounded corners=2pt
+]
+\tikzstyle{ucassoc} = [-, line width=0.5pt, draw=GrayDark]
+\tikzstyle{ucinclude}= [->, line width=0.5pt, draw=GrayDark, dashed]
+
+%% ─── En-têtes & pieds de page ─────────────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.2pt}
+\fancyhead[LE,RO]{\small\thepage}
+\fancyhead[LO]{\small\itshape\rightmark}
+\fancyhead[RE]{\small\itshape\leftmark}
+\fancyfoot[C]{\small\color{GrayMid} RT-Comops — Cahier de Conception — hrm-core}
+
+%% ─── Titres ───────────────────────────────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\chapter}[block]
+{\normalfont\Huge\bfseries\color{NavyDark}}
+{\thechapter}{1em}{}
+[\vspace{-0.5ex}\rule{\textwidth}{1.5pt}]
+
+\titleformat{\section}
+{\normalfont\Large\bfseries\color{GrayDark}}
+{\thesection}{0.8em}{}
+
+\titleformat{\subsection}
+{\normalfont\large\bfseries\color{GrayDark}}
+{\thesubsection}{0.7em}{}
+
+\titleformat{\subsubsection}
+{\normalfont\normalsize\bfseries\color{GrayDark}}
+{\thesubsubsection}{0.6em}{}
+
+%% ─── Environnements ───────────────────────────────────────────────────────────
+\usepackage{mdframed}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{adjustbox}
+\usepackage{graphicx}
+
+% Chemin des images des diagrammes
+\graphicspath{{diagrams/images/}}
+
+% Encadré de rôle
+\newmdenv[
+    linewidth=0.8pt,
+    linecolor=AccentLine,
+    backgroundcolor=GrayLight,
+    innerleftmargin=10pt,
+    innerrightmargin=10pt,
+    innertopmargin=8pt,
+    innerbottommargin=8pt,
+    leftmargin=0pt,
+    rightmargin=0pt,
+    skipabove=6pt,
+    skipbelow=6pt
+]{rolebox}
+
+% Encadré d'invariant
+\newmdenv[
+    linewidth=0.5pt,
+    linecolor=GrayMid,
+    backgroundcolor=white,
+    innerleftmargin=8pt,
+    innerrightmargin=8pt,
+    innertopmargin=6pt,
+    innerbottommargin=6pt,
+    leftmargin=0pt,
+    rightmargin=0pt,
+    skipabove=4pt,
+    skipbelow=4pt
+]{invariantbox}
+
+% ── Encadré « Règle métier » (style rolebox avec titre) ──
+\newenvironment{reglemetier}[1][]{%
+    \begin{rolebox}%
+    \textbf{\color{NavyDark}Règle métier\ifthenelse{\equal{#1}{}}{}{~— #1}}\\[4pt]%
+}{%
+    \end{rolebox}%
+}
+\usepackage{ifthen}
+
+% ── Encadré « Important » ──
+\newmdenv[
+    linewidth=0.8pt,
+    linecolor=red!60!black,
+    backgroundcolor=red!3,
+    innerleftmargin=10pt,
+    innerrightmargin=10pt,
+    innertopmargin=8pt,
+    innerbottommargin=8pt,
+    leftmargin=0pt,
+    rightmargin=0pt,
+    skipabove=6pt,
+    skipbelow=6pt
+]{importantbox}
+\newenvironment{important}[1][]{%
+    \begin{importantbox}%
+    \textbf{\color{red!60!black}Important\ifthenelse{\equal{#1}{}}{}{~— #1}}\\[4pt]%
+}{%
+    \end{importantbox}%
+}
+
+% ── Encadré « Convention » ──
+\newenvironment{convention}[1][]{%
+    \begin{invariantbox}%
+    \textbf{\color{GrayDark}Convention\ifthenelse{\equal{#1}{}}{}{~— #1}}\\[4pt]%
+}{%
+    \end{invariantbox}%
+}
+
+%% ─── Code source ──────────────────────────────────────────────────────────────
+\usepackage{listings}
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{GrayLight},
+    rulecolor=\color{GrayMid},
+    numbers=left,
+    numberstyle=\tiny\color{GrayMid},
+    keywordstyle=\color{NavyDark}\bfseries,
+    commentstyle=\color{GrayDark}\itshape,
+    stringstyle=\color{AccentLine},
+}
+
+%% ─── Liens ────────────────────────────────────────────────────────────────────
+\usepackage[
+    colorlinks=true,
+    linkcolor=NavyDark,
+    urlcolor=NavyDark,
+    citecolor=NavyDark,
+    bookmarks=true,
+    bookmarksopen=true
+]{hyperref}
+
+%% ─── Table des matières ───────────────────────────────────────────────────────
+\usepackage{tocloft}
+\setlength{\cftbeforechapskip}{4pt}
+\renewcommand{\cftchapfont}{\bfseries\color{NavyDark}}
+
+%% ─── Macros de changement de format de page ──────────────────────────────────
+\newcommand{\switchtoAthreelandscape}{%
+    \clearpage
+    \setlength{\paperwidth}{420mm}%
+    \setlength{\paperheight}{297mm}%
+    \pdfpagewidth=420mm%
+    \pdfpageheight=297mm%
+    \newgeometry{top=1.8cm, bottom=2.2cm, left=2cm, right=2cm, headheight=15pt}%
+    \thispagestyle{fancy}%
+}
+\newcommand{\switchtoAthreeportrait}{%
+    \clearpage
+    \setlength{\paperwidth}{297mm}%
+    \setlength{\paperheight}{420mm}%
+    \pdfpagewidth=297mm%
+    \pdfpageheight=420mm%
+    \newgeometry{top=2cm, bottom=2cm, left=2cm, right=2cm, headheight=15pt}%
+    \thispagestyle{fancy}%
+}
+\newcommand{\switchtoAfourlandscape}{%
+    \clearpage
+    \setlength{\paperwidth}{297mm}%
+    \setlength{\paperheight}{210mm}%
+    \pdfpagewidth=297mm%
+    \pdfpageheight=210mm%
+    \newgeometry{top=1.5cm, bottom=2cm, left=2cm, right=2cm, headheight=15pt}%
+    \thispagestyle{fancy}%
+}
+\newcommand{\switchbackAfourportrait}{%
+    \clearpage
+    \setlength{\paperwidth}{210mm}%
+    \setlength{\paperheight}{297mm}%
+    \pdfpagewidth=210mm%
+    \pdfpageheight=297mm%
+    \restoregeometry%
+    \thispagestyle{fancy}%
+}
+
+%% ─── Environnements de diagrammes ─────────────────────────────────────────────
+\newcommand{\diagfigbody}[2]{%
+    \phantomsection%
+    \addcontentsline{toc}{#1}{#2}%
+    \begin{center}%
+    {\large\bfseries\color{NavyDark} #2}%
+    \end{center}%
+    \vspace{0.2cm}%
+    \centering
+}
+
+\newenvironment{seqfig}[1]{%
+    \switchtoAthreelandscape\diagfigbody{subsection}{#1}%
+}{\switchbackAfourportrait}
+
+\newenvironment{seqfigiv}[1]{%
+    \switchtoAfourlandscape\diagfigbody{subsection}{#1}%
+}{\switchbackAfourportrait}
+
+\newenvironment{classfig}[1]{%
+    \switchtoAthreelandscape\diagfigbody{section}{#1}%
+}{\switchbackAfourportrait}
+
+\newenvironment{classfigiv}[1]{%
+    \switchtoAfourlandscape\diagfigbody{section}{#1}%
+}{\switchbackAfourportrait}
+
+%% ─── Correctif pgf-umlsd ─────────────────────────────────────────────────────
+\newcounter{messidx}
+\let\pgfumlsdorigmess\mess
+\renewcommand{\mess}[4][0]{%
+    \stepcounter{seqlevel}%
+    \stepcounter{messidx}%
+    \path
+    (#2)+(0,-\theseqlevel*\unitfactor-0.7*\unitfactor) node (messF\themessidx) {};
+    \addtocounter{seqlevel}{#1}%
+    \path
+    (#4)+(0,-\theseqlevel*\unitfactor-0.7*\unitfactor) node (messT\themessidx) {};
+    \draw[->,>=angle 60] (messF\themessidx) -- (messT\themessidx)
+    node[midway, above, font=\scriptsize] {#3};
+}
+
+%% ─── Macro acteur TikZ (diagramme UC) ────────────────────────────────────────
+\newcommand{\ucactor}[3]{%
+    \node[#2] (#1) {%
+        \begin{tikzpicture}[baseline]
+        \draw[line width=0.5pt] (0,0.45) circle (0.18cm);
+        \draw[line width=0.5pt] (0,0.27) -- (0,-0.15);
+        \draw[line width=0.5pt] (-0.22,0.12) -- (0.22,0.12);
+        \draw[line width=0.5pt] (0,-0.15) -- (-0.15,-0.45);
+        \draw[line width=0.5pt] (0,-0.15) -- (0.15,-0.45);
+        \end{tikzpicture}\\[2pt]
+        \small\bfseries #3
+    };
+}
+
+%% ─── Commandes d'insertion de diagrammes (images PNG/SVG) ────────────────────
+% Usage normal (A4 portrait) :
+%   \insertdiagram{nom-fichier}{0.95}{Légende}
+\newcommand{\insertdiagram}[3]{%
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=#2\textwidth]{#1}
+    \caption{#3}
+    \label{fig:#1}
+    \end{figure}
+}
+
+% A4 paysage :
+%   \insertdiagramAfourLandscape{nom-fichier}{0.95}{Légende}
+\newcommand{\insertdiagramAfourLandscape}[3]{%
+    \switchtoAfourlandscape
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=#2\textwidth]{#1}
+    \caption{#3}
+    \label{fig:#1}
+    \end{figure}
+    \switchbackAfourportrait
+}
+
+% A3 portrait :
+%   \insertdiagramAthreePortrait{nom-fichier}{0.95}{Légende}
+\newcommand{\insertdiagramAthreePortrait}[3]{%
+    \switchtoAthreeportrait
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=#2\textwidth]{#1}
+    \caption{#3}
+    \label{fig:#1}
+    \end{figure}
+    \switchbackAfourportrait
+}
+
+% A3 paysage :
+%   \insertdiagramAthreeLandscape{nom-fichier}{0.95}{Légende}
+\newcommand{\insertdiagramAthreeLandscape}[3]{%
+    \switchtoAthreelandscape
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=#2\textwidth]{#1}
+    \caption{#3}
+    \label{fig:#1}
+    \end{figure}
+    \switchbackAfourportrait
+}
+
+
+%% ─── Métadonnées ──────────────────────────────────────────────────────────────
+\title{}
+\author{}
+\date{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%% ─── Page de titre ────────────────────────────────────────────────────────────
+    \begin{titlepage}
+        \centering
+        \vspace*{2cm}
+
+        {\color{NavyDark}\rule{\textwidth}{2pt}}
+        \vspace{0.5cm}
+
+        {\fontsize{28}{34}\selectfont\bfseries\color{NavyDark}
+        Cahier de Conception}\\[0.4cm]
+        {\fontsize{18}{22}\selectfont\color{GrayDark}
+        Module \texttt{hrm-core}}\\[0.2cm]
+        {\fontsize{14}{18}\selectfont\color{GrayDark}
+        Gestion des Ressources Humaines \& Paie}
+
+        \vspace{0.5cm}
+        {\color{GrayMid}\rule{\textwidth}{0.4pt}}
+
+        \vspace{1.5cm}
+
+        {\large\color{GrayDark} Système \textbf{RT-Comops Backend}}\\[0.2cm]
+
+
+        \vfill
+
+        {\color{GrayMid}\rule{\textwidth}{0.4pt}}\\[0.3cm]
+        {\small\color{GrayDark} Ce document décrit l'architecture, la modélisation et les choix de conception du module \texttt{hrm-core} au sein de la plateforme RT-Comops.}
+    \end{titlepage}
+
+%% ─── Table des matières ───────────────────────────────────────────────────────
+    \frontmatter
+    \tableofcontents
+    \listoffigures
+    \listoftables
+    \clearpage
+
+%% ─── Corps du document ────────────────────────────────────────────────────────
+    \mainmatter
+
+
+%%% DÉBUT CONTENU HRM-CORE %%%
+% =============================================================================
+    \chapter{Introduction}
+% =============================================================================
+
+    \section{Objet du document}
+
+    Le présent cahier de conception décrit l'architecture technique et fonctionnelle du module \texttt{hrm-core}, composant du système \textbf{RT-Comops Backend}. Il formalise les choix de conception, la modélisation du domaine, les interactions inter-modules et les scénarios fonctionnels détaillés.
+
+    Ce document est destiné à l'équipe de développement, aux architectes logiciels et aux parties prenantes techniques du projet.
+
+    \section{Périmètre fonctionnel}
+
+    Le module \texttt{hrm-core} couvre les domaines fonctionnels suivants :
+
+    \begin{itemize}
+        \item \textbf{Gestion du personnel} : création, modification et résiliation des employés, gestion des contrats de travail et des personnes à charge.
+        \item \textbf{Gestion de la paie} : calcul mensuel des salaires (brut, cotisations CNPS, IRPP, CAC, net), validation, génération des ordres de paiement et déclarations CNPS.
+        \item \textbf{Gestion des congés} : soumission des demandes, approbation par le manager, suivi des soldes, acquisition mensuelle automatique.
+        \item \textbf{Avances et prêts sur salaire} : demande, approbation, déduction automatique sur la paie.
+        \item \textbf{Formation et évaluation} : planification des formations, inscription des employés, évaluations de performance avec objectifs pondérés.
+        \item \textbf{Conformité} : alertes sur les CDD expirants, suivi de la conformité réglementaire.
+    \end{itemize}
+
+    \section{Contexte système}
+
+    Le module \texttt{hrm-core} s'inscrit dans une architecture \textbf{modulaire monolithique} (modular monolith). L'ensemble des \textit{cores} cohabitent dans une même JVM Spring Boot mais sont isolés par des frontières claires (interfaces, packages, événements). La communication inter-modules se fait soit par appels synchrones (interfaces Java), soit par événements asynchrones (Apache Kafka via le pattern outbox transactionnel).
+
+    \section{Pile technologique}
+
+    \begin{table}[H]
+        \centering
+        \caption{Technologies utilisées par hrm-core}
+        \label{tab:stack}
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Composant} & \textbf{Technologie} \\
+    \midrule
+    Framework applicatif   & Spring Boot (WebFlux — réactif) \\
+    Accès base de données  & R2DBC (réactif), Liquibase (migrations) \\
+    Base de données        & PostgreSQL (un schéma par tenant) \\
+    Messagerie             & Apache Kafka (topic \texttt{iwm.events.business}) \\
+    Stockage fichiers      & MinIO / S3 (via \texttt{file-core}) \\
+    Sécurité               & JWT (extraction par \texttt{kernel-core}), RBAC (via \texttt{roles-core}) \\
+    Programmation réactive & Project Reactor (Mono, Flux) \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \section{Conventions de nommage}
+
+    \begin{convention}
+        \begin{itemize}
+            \item Les tables de la base de données sont préfixées par \texttt{hrm\_} (ex. \texttt{hrm\_employee}, \texttt{hrm\_payroll\_run}).
+            \item Les événements publiés suivent la convention \texttt{ENTITE\_ACTION} en majuscules (ex. \texttt{PAYROLL\_VALIDATED}, \texttt{EMPLOYEE\_CREATED}).
+            \item Les endpoints REST suivent le préfixe \texttt{/api/v1/hrm/}.
+            \item Les permissions RBAC suivent le format \texttt{hrm:<ressource>:<action>} (ex. \texttt{hrm:payroll:validate}).
+        \end{itemize}
+    \end{convention}
+
+
+% =============================================================================
+    \chapter{Architecture générale}
+% =============================================================================
+
+    \section{Architecture hexagonale}
+
+    Le module \texttt{hrm-core} adopte une \textbf{architecture hexagonale} (Ports \& Adapters), garantissant une séparation stricte entre la logique métier et les détails techniques d'infrastructure.
+
+% ── CHOIX FORMAT : A4 portrait par défaut, ou A3 paysage si le diagramme est large
+
+
+    \insertdiagramAthreePortrait{arch-hexagonal}{1}{Architecture hexagonale du module hrm-core au sein de RT-Comops}
+
+    \subsection{Couche Domaine (\texttt{domain/})}
+
+    La couche domaine contient les \textbf{agrégats}, \textbf{objets valeur} (Value Objects), \textbf{énumérations} et \textbf{règles métier pures}. Elle ne possède aucune dépendance technique (ni Spring, ni R2DBC, ni Kafka). Toutes les entités héritent de \texttt{BaseEntity} fourni par \texttt{common-core}, qui apporte :
+
+    \begin{itemize}
+        \item Les identifiants de contexte : \texttt{id} (UUID), \texttt{tenantId}, \texttt{organizationId}, \texttt{agencyId}.
+        \item Les champs d'audit : \texttt{createdBy}, \texttt{createdAt}, \texttt{updatedBy}, \texttt{updatedAt}.
+        \item Le verrouillage optimiste : \texttt{version} (Long).
+    \end{itemize}
+
+    \subsection{Couche Application (\texttt{application/})}
+
+    Cette couche orchestre les cas d'utilisation. Elle est structurée en trois sous-packages :
+
+    \begin{description}[style=nextline]
+  \item[\texttt{port/in/}] Interfaces des cas d'utilisation exposés (ports d'entrée). Chaque interface représente un groupe cohérent d'opérations : \texttt{ManageEmployeeUseCase}, \texttt{RunPayrollUseCase}, \texttt{ManageLeaveUseCase}, etc.
+  \item[\texttt{service/}] Implémentations des ports d'entrée. Les services orchestrent les appels aux ports de sortie et appliquent les règles métier. Exemples : \texttt{PayrollService}, \texttt{PayrollCalculationEngine}, \texttt{LeaveAccrualService}.
+  \item[\texttt{port/out/}] Interfaces des dépendances externes (ports de sortie). Ils abstraient l'accès aux données (\texttt{EmployeeRepository}, \texttt{PayrollRunRepository}) et aux modules voisins (\texttt{ActorPort}, \texttt{SettingsPort}, \texttt{FilePort}).
+    \end{description}
+
+    \subsection{Couche Adaptateur (\texttt{adapter/})}
+
+    Les adaptateurs implémentent les ports et connectent le domaine au monde extérieur :
+
+    \begin{description}[style=nextline]
+  \item[\texttt{adapter/in/web/}] Contrôleurs Spring WebFlux (endpoints REST). Ils transforment les requêtes HTTP en appels aux ports d'entrée via des DTO et des mappers. Les annotations \texttt{@Secured("hrm:...")} délèguent le contrôle d'accès à \texttt{roles-core}.
+  \item[\texttt{adapter/out/persistence/}] Implémentations R2DBC des interfaces de repositories. Ils accèdent au schéma PostgreSQL du tenant courant.
+  \item[\texttt{adapter/out/integration/}] Adaptateurs vers les cores voisins : \texttt{ActorAdapter}, \texttt{SettingsAdapter}, \texttt{FileAdapter}. Ces adaptateurs encapsulent les appels synchrones inter-modules.
+  \item[\texttt{adapter/out/messaging/}] Consommateur Kafka (\texttt{HrmEventConsumer}) qui écoute les événements externes pertinents (\texttt{ACTOR\_UPDATED}, \texttt{PAYMENT\_COMPLETED}).
+    \end{description}
+
+    \subsection{Configuration (\texttt{config/})}
+
+    \begin{itemize}
+        \item \texttt{HrmCoreConfiguration} : déclaration des beans Spring du module.
+        \item \texttt{HrmPermissionRegistrar} : enregistrement des permissions \texttt{hrm:*} auprès de \texttt{roles-core}.
+        \item \texttt{HrmLiquibaseConfig} : configuration des migrations Liquibase pour les tables \texttt{hrm\_*}.
+    \end{itemize}
+
+% ---
+
+    \section{Diagramme de composants}
+
+    Le diagramme de composants détaille la structure interne du module et le câblage entre les couches.
+
+    \insertdiagramAthreeLandscape{comp-hrm-core}{2.3}{Diagramme de composants interne de hrm-core}
+
+    Le flux de traitement suit le chemin suivant :
+    \begin{enumerate}
+        \item Le \textbf{contrôleur} (adapter/in) reçoit la requête HTTP et appelle le \textbf{port d'entrée} correspondant.
+        \item Le \textbf{service} (application) implémente le port d'entrée, manipule les \textbf{agrégats du domaine} et invoque les \textbf{ports de sortie}.
+        \item Les \textbf{adaptateurs de sortie} (adapter/out) implémentent les ports de sortie : persistence R2DBC, intégration inter-cores, messaging Kafka.
+        \item Les \textbf{événements métier} sont publiés via le pattern outbox transactionnel de \texttt{kernel-core}.
+    \end{enumerate}
+
+% ---
+
+    \section{Interactions inter-cores}
+
+    Le module \texttt{hrm-core} interagit avec l'ensemble de l'écosystème RT-Comops, tant de manière synchrone qu'asynchrone.
+
+    \insertdiagramAthreeLandscape{arch-inter-cores}{2}{Cartographie des interactions entre hrm-core et les autres cores}
+
+    \subsection{Dépendances synchrones (ports de sortie)}
+
+    \begin{table}[H]
+        \centering
+        \caption{Dépendances synchrones de hrm-core}
+        \label{tab:deps-sync}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Core cible} & \textbf{Port} & \textbf{Usage} \\
+    \midrule
+    \texttt{actor-core}        & \texttt{ActorPort}    & Résolution des \texttt{PartyRef} (identité des utilisateurs/acteurs). Vérification de l'existence d'un acteur lors de la création d'un employé. Résolution du manager pour les validations. \\
+    \texttt{organization-core} & \texttt{OrganizationPort} & Consultation de la structure des départements et de la hiérarchie organisationnelle. \\
+    \texttt{settings-core}     & \texttt{SettingsPort} & Lecture des paramètres de paie (taux CNPS, barème IRPP, abattement), consommation des séquences documentaires (génération du matricule). Résolution par héritage : Agence $\rightarrow$ Organisation $\rightarrow$ Tenant. \\
+    \texttt{file-core}         & \texttt{FilePort}     & Stockage et récupération des documents (contrats de travail, attestations de formation, justificatifs de congé) dans MinIO/S3. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{Dépendances transverses (implicites)}
+
+    \begin{table}[H]
+        \centering
+        \caption{Dépendances transverses de hrm-core}
+        \label{tab:deps-transverse}
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Core} & \textbf{Rôle} \\
+    \midrule
+    \texttt{common-core}  & Fournit \texttt{BaseEntity} (audit, verrouillage optimiste), \texttt{PartyRef} (référence dénormalisée à un acteur), \texttt{PagedResponse}, \texttt{ApiErrorResponse}. \\
+    \texttt{kernel-core}  & Outbox transactionnel pour la publication fiable d'événements, audit trail automatique, tenant routing (sélection du schéma PostgreSQL). \\
+    \texttt{auth-core}    & Validation du JWT en amont (filtre WebFlux de \texttt{kernel-core}). \\
+    \texttt{roles-core}   & Vérification transparente des permissions via les annotations \texttt{@Secured("hrm:...")} dans un filtre WebFlux. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{Communication asynchrone (Kafka)}
+
+    \begin{table}[H]
+        \centering
+        \caption{Événements Kafka de hrm-core}
+        \label{tab:events-kafka}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Direction} & \textbf{Événement} & \textbf{Consommateur / Producteur} \\
+    \midrule
+    \multirow{4}{*}{Publie} & \texttt{PAYROLL\_VALIDATED}       & $\rightarrow$ \texttt{accounting-core} (génération des écritures comptables) \\
+    & \texttt{PAYMENT\_ORDER\_CREATED}  & $\rightarrow$ \texttt{treasury-core} (création des transactions bancaires/mobile money) \\
+    & \texttt{EMPLOYEE\_CREATED}        & $\rightarrow$ notification, intégrations tierces \\
+    & \texttt{LEAVE\_APPROVED}          & $\rightarrow$ notification, mise à jour du planning \\
+    \midrule
+    \multirow{3}{*}{Consomme} & \texttt{PAYMENT\_COMPLETED}     & $\leftarrow$ \texttt{treasury-core} (confirmation de paiement) \\
+    & \texttt{PAYMENT\_FAILED}        & $\leftarrow$ \texttt{treasury-core} (échec de paiement) \\
+    & \texttt{ACTOR\_UPDATED}         & $\leftarrow$ \texttt{actor-core} (mise à jour des données identité) \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    Tous les événements sont publiés via le \textbf{pattern outbox transactionnel} de \texttt{kernel-core} : l'événement est inséré dans la table \texttt{kernel.outbox\_event} au sein de la même transaction que la modification métier, puis relayé vers Kafka par un scheduler dédié. Cela garantit la cohérence entre l'état de la base et les événements publiés.
+
+% ---
+
+    \section{Propagation du contexte multi-tenant}
+
+    Le système RT-Comops opère en mode \textbf{multi-tenant} avec une hiérarchie à quatre niveaux :
+
+    \begin{center}
+        \textbf{System} $\rightarrow$ \textbf{Tenant} $\rightarrow$ \textbf{Organisation} $\rightarrow$ \textbf{Agence}
+    \end{center}
+
+    \insertdiagramAthreeLandscape{arch-tenant-context}{0.6}{Propagation du contexte Tenant / Organisation / Agence}
+
+    \begin{reglemetier}
+        \begin{itemize}
+            \item L'utilisateur ne spécifie \textbf{jamais} son \texttt{tenantId} ni son \texttt{organizationId} dans les requêtes. Ces valeurs sont extraites \textbf{implicitement} du JWT par le filtre de sécurité de \texttt{kernel-core} et injectées dans le \texttt{ReactiveSecurityContext}.
+            \item Le \texttt{tenantId} détermine le \textbf{schéma PostgreSQL} cible (isolation des données par schéma).
+            \item L'\texttt{organizationId} filtre implicitement toutes les requêtes de données.
+            \item L'\texttt{agencyId} est un filtre \textbf{optionnel} que l'utilisateur peut spécifier pour restreindre le périmètre à une succursale ou filiale.
+        \end{itemize}
+    \end{reglemetier}
+
+% ---
+
+    \section{Diagramme de déploiement}
+
+    \insertdiagramAthreeLandscape{deploy-hrm}{2}{Diagramme de déploiement de hrm-core dans l'infrastructure RT-Comops}
+
+    L'ensemble des cores cohabitent dans une \textbf{unique JVM Spring Boot}. Le reverse proxy (Nginx/Traefik) route les requêtes HTTPS vers l'application. Les données sont stockées dans PostgreSQL (un schéma par tenant, plus un schéma \texttt{kernel} pour l'outbox et l'audit). Les fichiers sont stockés dans MinIO/S3. La communication événementielle passe par Apache Kafka.
+
+
+% =============================================================================
+    \chapter{Cas d'utilisation}
+% =============================================================================
+
+    \section{Vue globale des cas d'utilisation}
+
+    \insertdiagramAthreePortrait{uc-hrm-global}{0.8}{Diagramme des cas d'utilisation globaux de hrm-core}
+
+    \section{Acteurs du système}
+
+    \begin{table}[H]
+        \centering
+        \caption{Acteurs du module hrm-core}
+        \label{tab:acteurs}
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Acteur} & \textbf{Responsabilités} \\
+    \midrule
+    Admin RH     & Crée et gère les employés, les contrats, les personnes à charge. Lance le calcul de paie mensuel. Gère la conformité et les alertes CDD. \\
+    Comptable / DAF & Valide la paie calculée, génère les ordres de paiement. Approuve les demandes d'avance sur salaire. Consulte les bulletins. \\
+    Manager      & Approuve ou rejette les demandes de congé de son équipe. Consulte le planning de congés. Réalise les évaluations de performance. \\
+    Employé      & Soumet des demandes de congé, consulte son solde. Consulte ses bulletins de paie. Demande des avances sur salaire. S'inscrit aux formations. \\
+    DRH          & Planifie les formations. Participe aux évaluations. Consulte les alertes de conformité. \\
+    Recruteur    & Crée un employé (lié à un Actor existant) lors de l'embauche. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \section{Description détaillée des cas d'utilisation}
+
+    \subsection{Gestion du personnel}
+
+    \subsubsection*{UC-01 : Créer un employé}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-01 \\
+    \textbf{Nom}         & Créer un employé (lié à un Actor existant) \\
+    \textbf{Acteurs}     & Admin RH, Recruteur \\
+    \textbf{Préconditions} & L'acteur (personne physique) existe dans \texttt{actor-core}. L'utilisateur possède la permission \texttt{hrm:employee:create}. \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item L'Admin RH saisit l'\texttt{actorId} et les données RH (CNPS, catégorie, échelon, mode de paiement).
+      \item Le système résout la \texttt{PartyRef} via \texttt{actor-core} pour vérifier l'existence de l'acteur.
+      \item Le système vérifie l'unicité (pas de doublon pour cet acteur dans ce tenant).
+      \item Le système génère le matricule via la séquence documentaire de \texttt{settings-core}.
+      \item L'agrégat \texttt{Employee} est créé avec le statut \texttt{ACTIVE}.
+      \item Le contrat initial est créé simultanément.
+      \item Les soldes de congés sont initialisés (ANNUAL, SICK : acquis = 0, pris = 0).
+      \item Les événements \texttt{EMPLOYEE\_CREATED} et \texttt{CONTRACT\_CREATED} sont publiés.
+    \end{enumerate} \\
+    \midrule
+    \textbf{Postconditions} & L'employé est actif et participe aux prochains cycles de paie. \\
+    \textbf{Exceptions} & Acteur inexistant (404), doublon (409), données invalides (422). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-02 : Modifier les données RH d'un employé}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-02 \\
+    \textbf{Nom}         & Modifier les données RH d'un employé \\
+    \textbf{Acteurs}     & Admin RH \\
+    \textbf{Préconditions} & L'employé existe et n'est pas en statut \texttt{TERMINATED}. \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item L'Admin RH modifie les champs éditables (catégorie, échelon, département, mode de paiement, coordonnées bancaires/mobile money).
+      \item Le système valide les données et persiste les modifications.
+      \item Un événement \texttt{EMPLOYEE\_UPDATED} est publié.
+    \end{enumerate} \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-03 : Résilier un employé}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-03 \\
+    \textbf{Nom}         & Résilier / Terminer un employé \\
+    \textbf{Acteurs}     & Admin RH \\
+    \textbf{Préconditions} & L'employé est en statut \texttt{ACTIVE} ou \texttt{SUSPENDED}. \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item L'Admin RH saisit la date de fin et le motif (démission, licenciement, fin de CDD).
+      \item Le contrat actif est terminé.
+      \item Le statut de l'employé passe à \texttt{TERMINATED}.
+      \item L'employé est exclu des cycles de paie futurs.
+      \item Son historique reste consultable.
+    \end{enumerate} \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-04 : Gérer les contrats de travail}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-04 \\
+    \textbf{Nom}         & Gérer les contrats de travail \\
+    \textbf{Acteurs}     & Admin RH \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item Création d'un nouveau contrat (CDD, CDI, STAGE, INTERIM) avec salaire de base, avantages en nature, période d'essai.
+      \item Upload du document de contrat via \texttt{file-core}.
+      \item Renouvellement d'un CDD (extension de la date de fin).
+      \item Résiliation d'un contrat avec motif.
+    \end{enumerate} \\
+    \textbf{Règles} & Un seul contrat actif par employé à un instant donné. Les types sont : CDD (durée déterminée), CDI (durée indéterminée), STAGE (stage), INTERIM (intérim). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-05 : Gérer les personnes à charge}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-05 \\
+    \textbf{Nom}         & Gérer les personnes à charge \\
+    \textbf{Acteurs}     & Admin RH \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item Ajout d'une personne à charge (nom, prénom, date de naissance, lien de parenté).
+      \item Upload du certificat justificatif via \texttt{file-core}.
+      \item Le nombre d'enfants de moins de 14 ans impacte le calcul de l'acquisition de congés (majoration).
+    \end{enumerate} \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \subsection{Gestion de la paie}
+
+    \subsubsection*{UC-06 : Lancer le calcul de paie mensuel}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-06 \\
+    \textbf{Nom}         & Lancer le calcul de paie mensuel \\
+    \textbf{Acteurs}     & Admin RH \\
+    \textbf{Préconditions} & Aucun \texttt{PayrollRun} n'existe pour la même période, organisation et agence. \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item L'Admin RH sélectionne la période (mois/année) et optionnellement une agence.
+      \item Le système charge les règles de paie depuis \texttt{settings-core}.
+      \item Pour chaque employé actif : récupération du contrat actif, calcul du brut, des cotisations, de l'IRPP, des déductions de prêts, du net.
+      \item Les bulletins (\texttt{PayslipLine}) sont générés.
+      \item Le \texttt{PayrollRun} est persisté avec le statut \texttt{CALCULATED}.
+      \item L'événement \texttt{PAYROLL\_CALCULATED} est publié.
+    \end{enumerate} \\
+    \textbf{Exceptions} & Doublon de période (409). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-07 : Valider la paie}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-07 \\
+    \textbf{Nom}         & Valider la paie \\
+    \textbf{Acteurs}     & Comptable / DAF \\
+    \textbf{Préconditions} & Le \texttt{PayrollRun} est au statut \texttt{CALCULATED}. \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item Le comptable consulte le résumé de la paie et les bulletins individuels.
+      \item Il valide la paie.
+      \item Le statut passe à \texttt{VALIDATED}.
+      \item L'événement \texttt{PAYROLL\_VALIDATED} est publié vers \texttt{accounting-core} (écritures comptables).
+      \item Des événements \texttt{PAYMENT\_ORDER\_CREATED} sont publiés (un par employé) vers \texttt{treasury-core}.
+    \end{enumerate} \\
+    \textbf{Alternative} & Si des corrections sont nécessaires, le comptable rejette et le statut repasse à \texttt{DRAFT}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-08 : Générer les ordres de paiement}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-08 \\
+    \textbf{Nom}         & Générer les ordres de paiement \\
+    \textbf{Acteurs}     & Comptable / DAF \\
+    \midrule
+    \textbf{Description} & Les ordres de paiement sont générés automatiquement lors de la validation (UC-07). Chaque \texttt{PayrollEntry} produit un événement \texttt{PAYMENT\_ORDER\_CREATED} contenant le montant net, le canal de paiement (virement, MTN Mobile Money, Orange Money, espèces) et la référence du compte. \texttt{treasury-core} traite ces ordres et renvoie un callback \texttt{PAYMENT\_COMPLETED} ou \texttt{PAYMENT\_FAILED}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \subsection{Gestion des congés}
+
+    \subsubsection*{UC-09 : Soumettre une demande de congé}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-09 \\
+    \textbf{Nom}         & Soumettre une demande de congé \\
+    \textbf{Acteurs}     & Employé \\
+    \textbf{Préconditions} & Le solde de congés est suffisant pour le type et la durée demandés. \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item L'employé saisit le type de congé, les dates de début et de fin, et un motif.
+      \item Le système calcule le nombre de jours ouvrables.
+      \item Le système vérifie le solde disponible.
+      \item Le manager est résolu via \texttt{actor-core} et affecté comme valideur.
+      \item La demande est créée au statut \texttt{PENDING}.
+      \item L'événement \texttt{LEAVE\_SUBMITTED} est publié.
+    \end{enumerate} \\
+    \textbf{Exceptions} & Solde insuffisant (422). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-10 : Approuver / Rejeter un congé}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-10 \\
+    \textbf{Nom}         & Approuver ou rejeter une demande de congé \\
+    \textbf{Acteurs}     & Manager \\
+    \textbf{Préconditions} & La demande est au statut \texttt{PENDING}. \\
+    \midrule
+    \textbf{Scénario — Approbation} &
+    \begin{enumerate}[nosep]
+      \item Le manager approuve la demande.
+      \item Le solde de congés est débité du nombre de jours.
+      \item Le statut passe à \texttt{APPROVED}.
+      \item Les événements \texttt{LEAVE\_APPROVED} et \texttt{LEAVE\_BALANCE\_UPDATED} sont publiés.
+    \end{enumerate} \\
+    \midrule
+    \textbf{Scénario — Rejet} &
+    \begin{enumerate}[nosep]
+      \item Le manager rejette avec un commentaire.
+      \item Le statut passe à \texttt{REJECTED}.
+      \item Le solde n'est pas modifié.
+    \end{enumerate} \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \subsection{Avances et prêts}
+
+    \subsubsection*{UC-11 : Demander une avance sur salaire}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-11 \\
+    \textbf{Nom}         & Demander une avance sur salaire \\
+    \textbf{Acteurs}     & Employé \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item L'employé saisit le montant, le nombre d'échéances et le motif.
+      \item Le système vérifie que le cumul des prêts en cours ne dépasse pas le plafond autorisé.
+      \item La demande est créée au statut \texttt{PENDING}.
+    \end{enumerate} \\
+    \textbf{Exceptions} & Plafond de prêt dépassé (422). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-12 : Approuver une avance}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-12 \\
+    \textbf{Nom}         & Approuver une avance sur salaire \\
+    \textbf{Acteurs}     & Comptable / DAF \\
+    \midrule
+    \textbf{Scénario principal} &
+    \begin{enumerate}[nosep]
+      \item Le comptable approuve la demande.
+      \item Le statut passe de \texttt{PENDING} à \texttt{IN\_REPAYMENT}.
+      \item La mensualité sera automatiquement déduite lors des prochains calculs de paie.
+    \end{enumerate} \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \subsection{Formations et évaluations}
+
+    \subsubsection*{UC-13 : Planifier une formation}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-13 \\
+    \textbf{Nom}         & Planifier une formation \\
+    \textbf{Acteurs}     & DRH \\
+    \midrule
+    \textbf{Scénario} & Le DRH crée une formation (intitulé, organisme, dates, coût, nombre de places, lieu). Le statut initial est \texttt{PLANNED}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-14 : S'inscrire à une formation}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-14 \\
+    \textbf{Nom}         & S'inscrire à une formation \\
+    \textbf{Acteurs}     & Employé \\
+    \midrule
+    \textbf{Scénario} & L'employé s'inscrit à une formation disponible. L'inscription est créée au statut \texttt{ENROLLED}. Après la formation, une note d'évaluation et une attestation peuvent être ajoutées. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsubsection*{UC-15 : Réaliser une évaluation de performance}
+    \begin{table}[H]
+        \centering
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Identifiant} & UC-15 \\
+    \textbf{Nom}         & Réaliser une évaluation de performance \\
+    \textbf{Acteurs}     & Manager, DRH \\
+    \midrule
+    \textbf{Scénario} & L'évaluateur crée un bilan de performance pour un employé sur une période donnée. Il définit des objectifs pondérés, attribue des notes d'atteinte et rédige un plan d'action. L'évaluation passe par les statuts \texttt{DRAFT} $\rightarrow$ \texttt{SUBMITTED} $\rightarrow$ \texttt{ACKNOWLEDGED} $\rightarrow$ \texttt{FINALIZED}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+
+% =============================================================================
+    \chapter{Modélisation du domaine}
+% =============================================================================
+
+    Ce chapitre présente les diagrammes de classes du domaine, organisés par sous-domaine fonctionnel. L'ensemble des entités héritent de \texttt{BaseEntity} (défini dans \texttt{common-core}) qui fournit les champs d'identité, de contexte multi-tenant et d'audit.
+
+% ---
+
+    \section{Sous-domaine Employé}
+
+% ── Le diagramme de classes est large → A3 paysage
+    \insertdiagramAthreeLandscape{dc-employee}{2.3}{Diagramme de classes — Sous-domaine Employé}
+
+    \subsection{Classes et responsabilités}
+
+    \begin{description}[style=nextline]
+  \item[\texttt{Employee}] Agrégat racine du sous-domaine. Représente un salarié rattaché à un acteur (\texttt{PartyRef} vers \texttt{actor-core}). Porte les données RH spécifiques : matricule (généré automatiquement), numéro CNPS, catégorie professionnelle, échelon, date d'embauche, département et coordonnées de paiement. Expose les méthodes de cycle de vie : \texttt{hire()}, \texttt{terminate()}, \texttt{suspend()}, \texttt{reactivate()}.
+
+  \item[\texttt{Contract}] Représente un contrat de travail. Lié à un employé par \texttt{employeeId}. Porte le type de contrat, les dates, le salaire de base, les avantages en nature et la période d'essai. La méthode \texttt{isExpiringSoon(days)} permet de détecter les CDD arrivant à échéance.
+
+  \item[\texttt{Dependent}] Personne à charge d'un employé (enfant, conjoint). Le nombre d'enfants de moins de 14 ans impacte directement le calcul de l'acquisition de congés via la majoration pour charges de famille.
+
+  \item[\texttt{LeaveBalance}] Solde de congés par type et par année. Suit le modèle acquis/pris avec les méthodes \texttt{crediter()}, \texttt{debiter()} et \texttt{soldeRestant()}.
+
+  \item[\texttt{LoanAdvance}] Avance ou prêt sur salaire avec suivi du remboursement. La mensualité est automatiquement déduite lors du calcul de paie.
+    \end{description}
+
+    \subsection{Relations}
+
+    \begin{table}[H]
+        \centering
+        \caption{Relations du sous-domaine Employé}
+        \label{tab:rel-employee}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Relation} & \textbf{Cardinalité} & \textbf{Justification} \\
+    \midrule
+    Employee $\longrightarrow$ Contract & 1..\textasteriskcentered{} composition & Un employé possède un historique de contrats (CDD successifs, passage en CDI). Un seul contrat est actif à un instant donné. La suppression de l'employé entraîne la suppression de ses contrats. \\
+    Employee $\longrightarrow$ Dependent & 0..\textasteriskcentered{} composition & Un employé peut n'avoir aucune personne à charge ou en avoir plusieurs. Les personnes à charge sont liées au cycle de vie de l'employé. \\
+    Employee $\longrightarrow$ LeaveBalance & 0..\textasteriskcentered{} composition & Un employé possède un solde de congés par type (ANNUAL, SICK, etc.) et par année. Les soldes sont créés à l'embauche et crédités mensuellement. \\
+    Employee $\longrightarrow$ LoanAdvance & 0..\textasteriskcentered{} composition & Un employé peut avoir zéro ou plusieurs prêts/avances en cours. Le remboursement est automatique via la paie. \\
+    Employee $\longrightarrow$ PartyRef & association & Référence dénormalisée vers l'acteur (\texttt{actor-core}). Contient le \texttt{partyId} et le \texttt{displayName} pour éviter les appels systématiques à \texttt{actor-core}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{Énumérations}
+
+    \begin{table}[H]
+        \centering
+        \caption{Énumérations du sous-domaine Employé}
+        \label{tab:enum-employee}
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Enum} & \textbf{Valeurs et signification} \\
+    \midrule
+    \texttt{EmployeeStatus}  & \texttt{ACTIVE} (en poste), \texttt{ON\_LEAVE} (en congé), \texttt{SUSPENDED} (suspendu), \texttt{TERMINATED} (fin de contrat). \\
+    \texttt{ContractType}    & \texttt{CDD} (durée déterminée), \texttt{CDI} (durée indéterminée), \texttt{STAGE} (stage), \texttt{INTERIM} (intérim). \\
+    \texttt{ContractStatus}  & \texttt{ACTIVE}, \texttt{EXPIRED}, \texttt{TERMINATED}, \texttt{RENEWED}. \\
+    \texttt{PaymentChannel}  & \texttt{BANK\_TRANSFER}, \texttt{MTN\_MOBILE\_MONEY}, \texttt{ORANGE\_MONEY}, \texttt{CASH}. \\
+    \texttt{MobileOperator}  & \texttt{MTN}, \texttt{ORANGE}. \\
+    \texttt{LeaveType}       & \texttt{ANNUAL}, \texttt{SICK}, \texttt{MATERNITY}, \texttt{UNPAID}, \texttt{SPECIAL}. \\
+    \texttt{LoanStatus}      & \texttt{PENDING}, \texttt{APPROVED}, \texttt{IN\_REPAYMENT}, \texttt{FULLY\_REPAID}, \texttt{REJECTED}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \section{Sous-domaine Paie}
+
+    \insertdiagramAthreePortrait{dc-payroll}{0.90}{Diagramme de classes — Sous-domaine Paie}
+
+    \subsection{Classes et responsabilités}
+
+    \begin{description}[style=nextline]
+  \item[\texttt{PayrollRun}] Agrégat racine représentant une exécution de paie pour une période (mois/année), une organisation et optionnellement une agence. Porte les totaux agrégés (brut, net, cotisations) et le nombre d'employés traités. Orchestre le cycle de vie : \texttt{calculate()}, \texttt{validate()}, \texttt{reject()}, \texttt{generatePaymentOrders()}.
+
+  \item[\texttt{PayrollEntry}] Ligne de paie individuelle pour un employé dans un \texttt{PayrollRun}. Détaille le salaire de base, le brut, le net, chaque cotisation (CNPS employé/employeur, IRPP, CAC), les primes, retenues et avances déduites. Porte le statut de paiement et le canal de paiement.
+
+  \item[\texttt{PayslipLine}] \textbf{Objet valeur} représentant une ligne de bulletin de paie. Chaque ligne a un libellé, un type (gain ou retenue), une base, un taux, un montant et un ordre d'affichage.
+    \end{description}
+
+    \subsection{Relations}
+
+    \begin{table}[H]
+        \centering
+        \caption{Relations du sous-domaine Paie}
+        \label{tab:rel-payroll}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Relation} & \textbf{Cardinalité} & \textbf{Justification} \\
+    \midrule
+    PayrollRun $\longrightarrow$ PayrollEntry & 0..\textasteriskcentered{} composition & Un cycle de paie contient une entrée par employé traité. Les entrées n'existent pas indépendamment du \texttt{PayrollRun}. \\
+    PayrollEntry $\longrightarrow$ PayslipLine & 1..\textasteriskcentered{} composition & Chaque entrée contient au minimum une ligne de bulletin (salaire de base). Les lignes détaillent les gains et retenues pour la lisibilité du bulletin. \\
+    PayrollEntry $\longrightarrow$ Employee & association & Référence vers l'employé via \texttt{employeeId}. Permet de retrouver le bulletin d'un employé donné. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{Énumérations}
+
+    \begin{table}[H]
+        \centering
+        \caption{Énumérations du sous-domaine Paie}
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \textbf{Enum} & \textbf{Valeurs} \\
+    \midrule
+    \texttt{PayrollStatus}   & \texttt{DRAFT}, \texttt{CALCULATED}, \texttt{VALIDATED}, \texttt{PAID}. \\
+    \texttt{PaymentStatus}   & \texttt{PENDING}, \texttt{PROCESSING}, \texttt{COMPLETED}, \texttt{FAILED}. \\
+    \texttt{PayslipLineType} & \texttt{EARNING} (gain), \texttt{DEDUCTION} (retenue). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \section{Sous-domaine Congés}
+
+    \insertdiagramAthreeLandscape{dc-leave}{2}{Diagramme de classes — Sous-domaine Congés}
+
+    \subsection{Classes et responsabilités}
+
+    \begin{description}[style=nextline]
+  \item[\texttt{LeaveRequest}] Demande de congé soumise par un employé. Porte le type, les dates, le nombre de jours ouvrables calculé, le motif, la référence du valideur (\texttt{PartyRef}) et le justificatif éventuel. Expose les méthodes de cycle de vie : \texttt{submit()}, \texttt{approve()}, \texttt{reject()}, \texttt{cancel()}.
+
+  \item[\texttt{LeaveBalance}] Solde de congés pour un type et une année donnés. Suit l'acquisition progressive (créditée mensuellement par le \texttt{LeaveAccrualService}) et la consommation (débitée lors de l'approbation d'un congé).
+    \end{description}
+
+    \subsection{Relations}
+
+    \begin{table}[H]
+        \centering
+        \caption{Relations du sous-domaine Congés}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Relation} & \textbf{Cardinalité} & \textbf{Justification} \\
+    \midrule
+    LeaveRequest $\longrightarrow$ PartyRef & association & Référence dénormalisée vers le valideur (manager). Permet d'afficher le nom du valideur sans appel systématique à \texttt{actor-core}. \\
+    LeaveRequest $\longrightarrow$ LeaveType & association & Le type de congé détermine les règles de validation (solde requis, justificatif obligatoire pour SICK, etc.). \\
+    LeaveBalance $\longrightarrow$ LeaveType & association & Un solde est tenu par type de congé. Les types \texttt{ANNUAL} et \texttt{SICK} bénéficient d'une acquisition automatique. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{Énumérations}
+
+    \begin{table}[H]
+        \centering
+        \caption{Énumérations du sous-domaine Congés}
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \texttt{LeaveType}   & \texttt{ANNUAL}, \texttt{SICK}, \texttt{MATERNITY}, \texttt{PATERNITY}, \texttt{UNPAID}, \texttt{SPECIAL}. \\
+    \texttt{LeaveStatus} & \texttt{PENDING}, \texttt{APPROVED}, \texttt{REJECTED}, \texttt{CANCELLED}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \section{Sous-domaine Formations \& Évaluations}
+
+    \insertdiagramAthreeLandscape{dc-training-review}{2}{Diagramme de classes — Sous-domaine Formations et Évaluations}
+
+    \subsection{Classes et responsabilités}
+
+    \begin{description}[style=nextline]
+  \item[\texttt{Training}] Formation planifiée par le DRH. Porte l'intitulé, l'organisme formateur, les dates, le coût, le nombre de places et le lieu.
+
+  \item[\texttt{TrainingEnrollment}] Inscription d'un employé à une formation. Suit le statut de participation et peut contenir une note d'évaluation et un identifiant d'attestation.
+
+  \item[\texttt{PerformanceReview}] Évaluation de performance d'un employé pour une période donnée. Contient des objectifs pondérés, une note globale, des commentaires et un plan d'action.
+
+  \item[\texttt{Objective}] \textbf{Objet valeur} représentant un objectif dans une évaluation. Chaque objectif a une description, un poids (pourcentage), une note d'atteinte et un commentaire.
+    \end{description}
+
+    \subsection{Relations}
+
+    \begin{table}[H]
+        \centering
+        \caption{Relations du sous-domaine Formations et Évaluations}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Relation} & \textbf{Cardinalité} & \textbf{Justification} \\
+    \midrule
+    Training $\longrightarrow$ TrainingEnrollment & 0..\textasteriskcentered{} composition & Une formation peut avoir plusieurs inscrits. Les inscriptions n'ont de sens que dans le contexte de leur formation. \\
+    PerformanceReview $\longrightarrow$ Objective & 1..\textasteriskcentered{} composition & Une évaluation contient au moins un objectif. Les objectifs sont pondérés et leur somme des poids doit idéalement totaliser 100\%. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{Énumérations}
+
+    \begin{table}[H]
+        \centering
+        \caption{Énumérations du sous-domaine Formations et Évaluations}
+        \begin{tabularx}{\textwidth}{lX}
+    \toprule
+    \texttt{TrainingStatus}   & \texttt{PLANNED}, \texttt{IN\_PROGRESS}, \texttt{COMPLETED}, \texttt{CANCELLED}. \\
+    \texttt{EnrollmentStatus} & \texttt{ENROLLED}, \texttt{ATTENDED}, \texttt{COMPLETED}, \texttt{ABSENT}. \\
+    \texttt{ReviewStatus}     & \texttt{DRAFT}, \texttt{SUBMITTED}, \texttt{ACKNOWLEDGED}, \texttt{FINALIZED}. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+
+% =============================================================================
+    \chapter{Machines à états}
+% =============================================================================
+
+    Ce chapitre formalise les cycles de vie des entités principales du module à travers leurs machines à états. Chaque transition est conditionnée par des règles métier précises.
+
+    \section{Machine à états — Employee}
+
+    \insertdiagram{sm-employee}{0.80}{Machine à états de l'entité Employee}
+
+    \begin{table}[H]
+        \centering
+        \caption{Transitions de l'entité Employee}
+        \label{tab:sm-employee}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Transition} & \textbf{Déclencheur} & \textbf{Règles} \\
+    \midrule
+    $[\ast] \rightarrow$ ACTIVE          & \texttt{hire(actorRef, contrat)}     & Création de l'employé et de son contrat initial. \\
+    ACTIVE $\rightarrow$ ON\_LEAVE       & Congé approuvé                        & Mis à jour automatiquement par un job planifié (cron quotidien) à la date de début du congé. L'employé reste inclus dans le calcul de paie. \\
+    ON\_LEAVE $\rightarrow$ ACTIVE       & Retour de congé                       & Mis à jour automatiquement à la date de fin du congé. \\
+    ACTIVE $\rightarrow$ SUSPENDED       & \texttt{suspend(reason)}              & Décision disciplinaire. L'employé est temporairement écarté. \\
+    SUSPENDED $\rightarrow$ ACTIVE       & \texttt{reactivate()}                 & Levée de suspension. \\
+    ACTIVE $\rightarrow$ TERMINATED      & \texttt{terminate(date, reason)}      & Démission, licenciement ou fin de CDD. \\
+    SUSPENDED $\rightarrow$ TERMINATED   & \texttt{terminate(date, reason)}      & Résiliation depuis l'état suspendu. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \begin{reglemetier}
+        Un employé au statut \texttt{TERMINATED} n'est plus inclus dans les cycles de paie futurs, mais son historique (contrats, bulletins, congés) reste consultable à des fins d'archivage et d'audit.
+    \end{reglemetier}
+
+% ---
+
+    \section{Machine à états — PayrollRun}
+
+    \insertdiagram{sm-payroll}{0.85}{Machine à états de l'entité PayrollRun}
+
+    \begin{table}[H]
+        \centering
+        \caption{Transitions de l'entité PayrollRun}
+        \label{tab:sm-payroll}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Transition} & \textbf{Déclencheur} & \textbf{Règles} \\
+    \midrule
+    $[\ast] \rightarrow$ DRAFT             & Ouverture de période               & L'Admin RH peut modifier les éléments variables avant de lancer le calcul. \\
+    DRAFT $\rightarrow$ CALCULATED         & \texttt{runPayroll()}              & Tous les employés actifs ont été traités. Les bulletins sont générés. \\
+    CALCULATED $\rightarrow$ VALIDATED     & \texttt{validate(validatorId)}     & Le comptable autorisé valide la paie. Les événements \texttt{PAYROLL\_VALIDATED} et \texttt{PAYMENT\_ORDER\_CREATED} sont publiés. \\
+    CALCULATED $\rightarrow$ DRAFT         & \texttt{reject(reason)}            & Correction nécessaire, retour en mode éditable. \\
+    VALIDATED $\rightarrow$ PAID           & Callback \texttt{PAYMENT\_COMPLETED} & Tous les \texttt{PayrollEntry.paymentStatus} sont passés à \texttt{COMPLETED} (confirmé par \texttt{treasury-core}). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \section{Machine à états — LeaveRequest}
+
+    \insertdiagram{sm-leave-request}{0.75}{Machine à états de l'entité LeaveRequest}
+
+    \begin{table}[H]
+        \centering
+        \caption{Transitions de l'entité LeaveRequest}
+        \label{tab:sm-leave}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Transition} & \textbf{Déclencheur} & \textbf{Règles} \\
+    \midrule
+    $[\ast] \rightarrow$ PENDING           & \texttt{submit()}                  & Le solde de congés doit être suffisant. Le valideur (manager) est identifié. \\
+    PENDING $\rightarrow$ APPROVED         & \texttt{approve(managerId)}        & Le solde est débité. L'employé passera à \texttt{ON\_LEAVE} à la date de début. \\
+    PENDING $\rightarrow$ REJECTED         & \texttt{reject(managerId, comment)} & Le solde n'est pas modifié. \\
+    PENDING $\rightarrow$ CANCELLED        & \texttt{cancel()} par l'employé    & Annulation avant validation. \\
+    APPROVED $\rightarrow$ CANCELLED       & \texttt{cancel()} exceptionnel     & Uniquement avant la date de début. Le solde est re-crédité automatiquement. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+% ---
+
+    \section{Machine à états — LoanAdvance}
+
+    \insertdiagram{sm-loan-advance}{0.80}{Machine à états de l'entité LoanAdvance}
+
+    \begin{table}[H]
+        \centering
+        \caption{Transitions de l'entité LoanAdvance}
+        \label{tab:sm-loan}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Transition} & \textbf{Déclencheur} & \textbf{Règles} \\
+    \midrule
+    $[\ast] \rightarrow$ PENDING           & \texttt{request(montant, nbEcheances)} & Le cumul des prêts en cours ne doit pas dépasser le plafond. \\
+    PENDING $\rightarrow$ APPROVED         & \texttt{approve(approverId)}     & Approbation par le Comptable/DAF. \\
+    PENDING $\rightarrow$ REJECTED         & \texttt{reject(approverId, motif)} & Refus avec motif. \\
+    APPROVED $\rightarrow$ IN\_REPAYMENT   & Premier cycle de paie            & La première mensualité est déduite du salaire. \\
+    IN\_REPAYMENT $\rightarrow$ IN\_REPAYMENT & \texttt{deduire(mensualite)}  & Tant que \texttt{soldeRestant > 0}. \\
+    IN\_REPAYMENT $\rightarrow$ FULLY\_REPAID & \texttt{deduire(mensualite)} & Quand \texttt{soldeRestant == 0}. Le prêt est soldé. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \begin{reglemetier}
+        À chaque calcul de paie (DS-HRM-01), le \texttt{PayrollCalculationEngine} récupère les prêts actifs de chaque employé et déduit automatiquement la mensualité. La déduction est : \texttt{min(mensualite, soldeRestant)}. Lorsque le solde atteint zéro, le prêt passe en statut \texttt{FULLY\_REPAID}.
+    \end{reglemetier}
+
+
+% =============================================================================
+    \chapter{Scénarios détaillés (Diagrammes de séquence)}
+% =============================================================================
+
+    Ce chapitre décrit les scénarios fonctionnels clés du module à travers des diagrammes de séquence détaillés. Chaque scénario illustre les interactions entre les acteurs, les couches de l'architecture hexagonale et les systèmes externes.
+
+% ---
+
+    \section{DS-HRM-01 : Exécution du calcul de paie mensuel}
+
+    \subsection{Description}
+
+    Ce scénario décrit le processus complet de calcul de paie pour une période donnée. L'Admin RH déclenche le calcul ; le système charge les règles de paie, itère sur chaque employé actif, calcule les cotisations selon la législation camerounaise et génère les bulletins de paie.
+
+    \subsection{Acteurs et participants}
+
+    \begin{itemize}
+        \item \textbf{Admin RH} : déclenche le calcul via l'interface.
+        \item \textbf{WebController} : point d'entrée REST.
+        \item \textbf{PayrollService} : orchestre le processus.
+        \item \textbf{PayrollCalculationEngine} : moteur de calcul pur (logique métier).
+        \item \textbf{SettingsPort} : fournit les paramètres de paie (taux, barèmes).
+        \item \textbf{EmployeeRepository}, \textbf{PayrollRunRepository}, \textbf{LoanAdvanceRepository} : accès aux données.
+        \item \textbf{OutboxEvent} : publication des événements via le pattern outbox.
+    \end{itemize}
+
+    \subsection{Diagramme de séquence}
+
+% ── Diagramme de séquence très large → A3 paysage
+    \insertdiagramAthreeLandscape{ds-hrm-01-payroll-run}{2}{DS-HRM-01 — Exécution du calcul de paie mensuel}
+
+    \subsection{Description textuelle du flux}
+
+    \begin{enumerate}
+        \item L'Admin RH envoie une requête \texttt{POST /api/v1/hrm/payroll/run} avec la période (ex. \texttt{2026-03}) et optionnellement un \texttt{agencyId}. Le \texttt{tenantId} et l'\texttt{organizationId} sont extraits implicitement du JWT.
+
+        \item Le \texttt{PayrollService} vérifie qu'aucun \texttt{PayrollRun} n'existe déjà pour cette combinaison période/organisation/agence. En cas de doublon, une erreur HTTP 409 est retournée.
+
+        \item Les règles de paie sont chargées depuis \texttt{settings-core} avec résolution par héritage (Agence $\rightarrow$ Organisation $\rightarrow$ Tenant). Les paramètres incluent :
+        \begin{itemize}
+            \item Taux CNPS PV employé : 4,2\%
+            \item Taux CNPS PV employeur : 4,2\%
+            \item Taux CNPS AF : 7\%
+            \item Plafond CNPS : 750\,000 FCFA
+            \item Barème IRPP progressif
+            \item Abattement forfaitaire : 30\%
+        \end{itemize}
+
+        \item Le service récupère tous les employés au statut \texttt{ACTIVE} pour l'organisation (et l'agence si spécifiée).
+
+        \item \textbf{Pour chaque employé}, le \texttt{PayrollCalculationEngine} effectue le calcul suivant :
+        \begin{enumerate}[label=\alph*.]
+    \item Récupération du contrat actif $\rightarrow$ \texttt{salaireBase}.
+    \item Calcul des primes (ancienneté, transport, etc.).
+    \item Calcul des heures supplémentaires.
+    \item \textbf{Brut} = base + primes + HS + avantages en nature.
+    \item \textbf{CNPS employé} = min(brut, plafond) $\times$ 4,2\%.
+    \item \textbf{CNPS employeur} = PV + AF + AT.
+    \item \textbf{Net imposable} = brut $\times$ 70\% (après abattement de 30\%).
+    \item \textbf{IRPP} = application du barème progressif camerounais sur le net imposable.
+    \item \textbf{CAC} = IRPP $\times$ 10\%.
+    \item Récupération des prêts actifs $\rightarrow$ mensualités à déduire.
+    \item \textbf{Retenues totales} = CNPS + IRPP + CAC + prêts.
+    \item \textbf{Net à payer} = Brut $-$ Retenues totales.
+        \end{enumerate}
+        Un \texttt{PayrollEntry} et ses \texttt{PayslipLine} sont générés.
+
+        \item Le \texttt{PayrollRun} est persisté avec le statut \texttt{CALCULATED} et les totaux agrégés.
+
+        \item L'événement \texttt{PAYROLL\_CALCULATED} est inséré dans la table outbox.
+
+        \item La réponse HTTP 200 est retournée avec le résumé de la paie.
+    \end{enumerate}
+
+% ---
+
+    \section{DS-HRM-02 : Validation de la paie et publication}
+
+    \subsection{Description}
+
+    Ce scénario décrit la validation de la paie par le comptable et la publication des événements vers \texttt{accounting-core} (écritures comptables) et \texttt{treasury-core} (ordres de paiement), ainsi que le callback asynchrone de confirmation de paiement.
+
+    \subsection{Diagramme de séquence}
+
+    \insertdiagramAthreeLandscape{ds-hrm-02-payroll-validate}{2}{DS-HRM-02 — Validation de la paie et publication vers accounting-core / treasury-core}
+
+    \subsection{Description textuelle du flux}
+
+    \begin{enumerate}
+        \item Le Comptable/DAF envoie \texttt{POST /api/v1/hrm/payroll/runs/\{id\}/validate}.
+
+        \item Le \texttt{PayrollService} vérifie que le \texttt{PayrollRun} est au statut \texttt{CALCULATED}. Si ce n'est pas le cas, une erreur HTTP 409 est retournée.
+
+        \item Le statut passe à \texttt{VALIDATED}. Les champs \texttt{validatedBy} et \texttt{validatedAt} sont renseignés.
+
+        \item Un événement \texttt{PAYROLL\_VALIDATED} est publié via l'outbox. Le payload contient l'identifiant du run, la période, l'organisation et le détail par employé (brut, net, cotisations). \texttt{accounting-core} consomme cet événement et génère automatiquement les écritures comptables en partie double :
+        \begin{itemize}
+            \item 661 — Rémunérations du personnel (débit)
+            \item 4211 — Personnel, rémunérations dues (crédit)
+            \item 4311 — CNPS à payer (crédit)
+            \item 4421 — IRPP à payer (crédit)
+        \end{itemize}
+
+        \item Pour chaque \texttt{PayrollEntry}, un événement \texttt{PAYMENT\_ORDER\_CREATED} est publié. Le payload contient le montant net, le canal de paiement, la référence du compte et une référence de paiement (ex. \texttt{SAL-2026-03-\{matricule\}}). \texttt{treasury-core} crée les transactions bancaires ou mobile money correspondantes.
+
+        \item \textbf{Callback asynchrone} : lorsque \texttt{treasury-core} confirme le paiement, il publie un événement \texttt{PAYMENT\_COMPLETED} (ou \texttt{PAYMENT\_FAILED}). Le \texttt{HrmEventConsumer} consomme cet événement et met à jour le \texttt{paymentStatus} de la \texttt{PayrollEntry} correspondante. Lorsque toutes les entrées sont \texttt{COMPLETED}, le \texttt{PayrollRun} passe au statut \texttt{PAID}.
+    \end{enumerate}
+
+% ---
+
+    \section{DS-HRM-03 : Soumission et validation d'une demande de congé}
+
+    \subsection{Description}
+
+    Ce scénario en deux phases illustre le cycle complet d'une demande de congé : soumission par l'employé, puis approbation (ou rejet) par le manager.
+
+    \subsection{Diagramme de séquence}
+
+    \insertdiagramAthreeLandscape{ds-hrm-03-leave-request}{1.5}{DS-HRM-03 — Soumission et validation d'une demande de congé}
+
+    \subsection{Phase 1 : Soumission par l'employé}
+
+    \begin{enumerate}
+        \item L'employé envoie \texttt{POST /api/v1/hrm/leaves} avec le type (ANNUAL), les dates de début et de fin, et un motif.
+
+        \item Le \texttt{LeaveService} récupère le solde de congés pour le type et l'année en cours. Exemple : acquis = 18,0 jours, pris = 5,5 jours $\Rightarrow$ solde restant = 12,5 jours.
+
+        \item Le nombre de jours ouvrables est calculé entre les dates fournies (ex. 5,0 jours).
+
+        \item \textbf{Vérification du solde} : si le solde est insuffisant (\texttt{solde < nbJours}), une erreur HTTP 422 (\texttt{InsufficientLeaveBalanceException}) est retournée au format \texttt{ApiErrorResponse} de \texttt{common-core}.
+
+        \item Le manager de l'employé est résolu via \texttt{ActorPort.resolveManager(employeeId)}, qui retourne une \texttt{PartyRef} dénormalisée.
+
+        \item La \texttt{LeaveRequest} est créée au statut \texttt{PENDING} avec la référence du valideur.
+
+        \item L'événement \texttt{LEAVE\_SUBMITTED} est publié via l'outbox.
+
+        \item La réponse HTTP 201 est retournée.
+    \end{enumerate}
+
+    \subsection{Phase 2 : Approbation par le manager}
+
+    \begin{enumerate}
+        \item Le manager envoie \texttt{PUT /api/v1/hrm/leaves/\{id\}/approve}.
+
+        \item Le service vérifie que la demande est au statut \texttt{PENDING}. Sinon, erreur HTTP 409.
+
+        \item La méthode \texttt{approve(managerId)} est appelée sur l'agrégat.
+
+        \item Le solde de congés est débité : \texttt{pris += nbJours} (ex. pris passe de 5,5 à 10,5 ; solde restant = 7,5).
+
+        \item Le statut de la demande passe à \texttt{APPROVED}.
+
+        \item Deux événements sont publiés : \texttt{LEAVE\_APPROVED} et \texttt{LEAVE\_BALANCE\_UPDATED}.
+    \end{enumerate}
+
+% ---
+
+    \section{DS-HRM-04 : Création d'un employé}
+
+    \subsection{Description}
+
+    Ce scénario détaille la création d'un employé rattaché à un acteur existant dans \texttt{actor-core}, incluant la génération du matricule, la création du contrat initial et l'initialisation des soldes de congés.
+
+    \subsection{Diagramme de séquence}
+
+    \insertdiagramAthreeLandscape{ds-hrm-04-employee-create}{1.5}{DS-HRM-04 — Création d'un employé lié à un Actor existant}
+
+    \subsection{Description textuelle du flux}
+
+    \begin{enumerate}
+        \item L'Admin RH envoie \texttt{POST /api/v1/hrm/employees} avec l'\texttt{actorId}, les données RH (numCnps, catégorie, échelon, département, mode de paiement) et le contrat initial (type, salaire de base, date de début).
+
+        \item Le \texttt{EmployeeService} résout la \texttt{PartyRef} via \texttt{actor-core} pour vérifier l'existence de l'acteur et récupérer son nom d'affichage.
+
+        \item Le service vérifie qu'il n'existe pas déjà un employé pour cet acteur dans ce tenant (\texttt{existsByActorIdAndTenant}). En cas de doublon, erreur HTTP 409.
+
+        \item Le matricule est généré atomiquement via \texttt{settings-core} en consommant la séquence documentaire \texttt{hrm.sequence.matricule} (ex. \texttt{EMP-2026-0043}).
+
+        \item L'agrégat \texttt{Employee} est créé via la méthode fabrique \texttt{Employee.hire()}. Les champs \texttt{BaseEntity} (\texttt{tenantId}, \texttt{organizationId}, \texttt{agencyId}, \texttt{createdBy}) sont propagés automatiquement par \texttt{common-core} depuis le \texttt{SecurityContext}.
+
+        \item Le contrat initial est créé et persisté.
+
+        \item Les soldes de congés sont initialisés pour les types ANNUAL et SICK (acquis = 0, pris = 0).
+
+        \item Les événements \texttt{EMPLOYEE\_CREATED} et \texttt{CONTRACT\_CREATED} sont publiés.
+
+        \item La réponse HTTP 201 est retournée.
+    \end{enumerate}
+
+% ---
+
+    \section{DS-HRM-05 : Demande et déduction d'une avance sur salaire}
+
+    \subsection{Description}
+
+    Ce scénario en trois phases couvre le cycle complet d'une avance sur salaire : la demande par l'employé, l'approbation par le comptable, et la déduction automatique lors du calcul de paie.
+
+    \subsection{Diagramme de séquence}
+
+    \insertdiagramAthreeLandscape{ds-hrm-05-loan-advance}{1.6}{DS-HRM-05 — Demande et déduction d'une avance sur salaire}
+
+    \subsection{Phase 1 : Demande par l'employé}
+
+    \begin{enumerate}
+        \item L'employé envoie \texttt{POST /api/v1/hrm/loan-advances} avec le montant (ex. 100\,000 FCFA), le nombre d'échéances (ex. 2) et le motif.
+
+        \item Le service vérifie que le cumul des prêts en cours ne dépasse pas le plafond autorisé. En cas de dépassement, erreur HTTP 422.
+
+        \item La \texttt{LoanAdvance} est créée : montant = 100\,000, soldeRestant = 100\,000, mensualité = 50\,000, statut = \texttt{PENDING}.
+    \end{enumerate}
+
+    \subsection{Phase 2 : Approbation par le comptable}
+
+    \begin{enumerate}
+        \item Le comptable envoie \texttt{PUT /api/v1/hrm/loan-advances/\{id\}/approve}.
+        \item Le statut passe de \texttt{PENDING} à \texttt{IN\_REPAYMENT}.
+        \item L'événement \texttt{LOAN\_APPROVED} est publié.
+    \end{enumerate}
+
+    \subsection{Phase 3 : Déduction automatique lors du calcul de paie}
+
+    \begin{enumerate}
+        \item Lors du calcul de paie (DS-HRM-01), le \texttt{PayrollCalculationEngine} récupère les prêts actifs de chaque employé.
+
+        \item La retenue est calculée : \texttt{min(mensualite, soldeRestant)} = 50\,000 FCFA. Elle est ajoutée comme \texttt{PayslipLine} de type \texttt{DEDUCTION}.
+
+        \item Le \texttt{LoanAdvanceService} est appelé pour déduire la mensualité : \texttt{soldeRestant} passe de 100\,000 à 50\,000.
+
+        \item Au cycle suivant, la dernière mensualité (50\,000) est déduite et le prêt passe en statut \texttt{FULLY\_REPAID}.
+    \end{enumerate}
+
+% ---
+
+    \section{DS-HRM-06 : Acquisition mensuelle automatique des congés}
+
+    \subsection{Description}
+
+    Ce scénario décrit le processus automatisé d'acquisition de congés, exécuté mensuellement par un job planifié (cron le 1\textsuperscript{er} du mois). Il crédite les soldes de congés de chaque employé actif selon les règles légales camerounaises.
+
+    \subsection{Diagramme de séquence}
+
+    \insertdiagramAthreeLandscape{ds-hrm-06-leave-accrual}{1.6}{DS-HRM-06 — Acquisition mensuelle automatique des congés}
+
+    \subsection{Description textuelle du flux}
+
+    \begin{enumerate}
+        \item Le scheduler (cron) déclenche \texttt{LeaveAccrualService.runMonthlyAccrual(tenantId, orgId)} le 1\textsuperscript{er} de chaque mois.
+
+        \item Les règles d'acquisition sont chargées depuis \texttt{settings-core} :
+        \begin{itemize}
+            \item Acquisition mensuelle de base : 1,5 jour/mois (soit 18 jours/an).
+            \item Majoration ancienneté $\geq$ 5 ans : +2 jours/an (soit +0,167 jour/mois).
+            \item Majoration ancienneté $\geq$ 10 ans : +2 jours/an supplémentaires.
+            \item Majoration pour enfants $<$ 14 ans : min(nb\_enfants $\times$ 2, 10) / 12 jours/mois.
+        \end{itemize}
+
+        \item Pour chaque employé actif :
+        \begin{enumerate}[label=\alph*.]
+    \item L'acquisition mensuelle est calculée en fonction de l'ancienneté et des charges de famille.
+    \item Le solde de congés annuels (\texttt{LeaveBalance} de type \texttt{ANNUAL}) est crédité du montant calculé.
+    \item Un événement \texttt{LEAVE\_BALANCE\_UPDATED} est publié.
+        \end{enumerate}
+
+        \item Le nombre d'employés traités est retourné au scheduler.
+    \end{enumerate}
+
+
+% =============================================================================
+    \chapter{Diagramme d'activité}
+% =============================================================================
+
+    \section{Processus de calcul de paie mensuel}
+
+    Le diagramme d'activité suivant formalise le processus métier complet de calcul de paie, du point de vue de l'Admin RH et du système \texttt{hrm-core}. Il met en évidence les points de décision, les boucles de traitement et les étapes de validation.
+
+    \insertdiagramAthreePortrait{act-payroll-run}{0.7}{Diagramme d'activité — Processus de calcul de paie mensuel}
+
+    \subsection{Description du processus}
+
+    \begin{enumerate}
+        \item L'Admin RH accède à l'écran de paie mensuelle. Le contexte tenant/organisation est implicitement déterminé par le JWT.
+
+        \item Il sélectionne la période (mois/année) et, optionnellement, une agence pour restreindre le périmètre.
+
+        \item Le système vérifie l'absence de doublon pour cette combinaison période/organisation/agence.
+
+        \item Les règles de paie sont chargées avec résolution par héritage (Agence $\rightarrow$ Organisation $\rightarrow$ Tenant).
+
+        \item \textbf{Pour chaque employé actif}, le moteur de calcul exécute la séquence de calcul complète (brut, cotisations, IRPP, CAC, prêts, net).
+
+        \item Les totaux sont agrégés et le \texttt{PayrollRun} est persisté au statut \texttt{CALCULATED}.
+
+        \item L'Admin RH examine le résumé et décide :
+        \begin{itemize}
+            \item Si des corrections sont nécessaires, il modifie les éléments variables et relance le calcul (le \texttt{PayrollRun} \texttt{DRAFT} est écrasé).
+            \item Si les montants sont corrects, il transmet au Comptable pour validation (UC-07).
+        \end{itemize}
+    \end{enumerate}
+
+
+% =============================================================================
+    \chapter{Modèle logique de données}
+% =============================================================================
+
+    \section{Vue d'ensemble}
+
+    Le modèle de données du module \texttt{hrm-core} comprend \textbf{13 tables}, toutes préfixées par \texttt{hrm\_} et stockées dans le schéma PostgreSQL propre à chaque tenant. Toutes les entités (sauf \texttt{hrm\_payslip\_line} et \texttt{hrm\_review\_objective} qui sont des objets valeur allégés) portent les champs d'audit hérités de \texttt{BaseEntity}.
+
+% ── MLD très large → A3 paysage
+    \insertdiagramAthreeLandscape{mld-hrm}{1.5}{Modèle logique de données de hrm-core}
+
+% ---
+
+    \section{Description des tables}
+
+    \subsection{hrm\_employee}
+    \begin{table}[H]
+        \centering
+        \caption{Table hrm\_employee — Données RH de l'employé}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Colonne} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    id               & UUID (PK)     & Identifiant unique. \\
+    tenant\_id       & UUID (FK)     & Référence au tenant (kernel-core). \\
+    organization\_id & UUID (FK)     & Référence à l'organisation. \\
+    agency\_id       & UUID (FK, nullable) & Agence de rattachement (optionnel). \\
+    actor\_id        & UUID (FK)     & Référence vers l'acteur dans actor-core. \\
+    matricule        & VARCHAR(20) UNIQUE & Matricule généré automatiquement (ex. EMP-2026-0043). \\
+    num\_cnps        & VARCHAR(20)   & Numéro CNPS de l'employé. \\
+    categorie        & INT           & Catégorie professionnelle. \\
+    echelon          & VARCHAR(5)    & Échelon dans la grille salariale. \\
+    date\_embauche   & DATE          & Date d'embauche. \\
+    status           & VARCHAR(20)   & Statut (ACTIVE, ON\_LEAVE, SUSPENDED, TERMINATED). \\
+    department\_code & VARCHAR(20)   & Code du département de rattachement. \\
+    mode\_paiement   & VARCHAR(30)   & Canal de paiement (BANK\_TRANSFER, MTN\_MOBILE\_MONEY, etc.). \\
+    compte\_bancaire & VARCHAR(30)   & Numéro de compte bancaire. \\
+    num\_mobile\_money & VARCHAR(15) & Numéro de téléphone mobile money. \\
+    operateur\_mm    & VARCHAR(10)   & Opérateur mobile money (MTN, ORANGE). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{hrm\_contract}
+    \begin{table}[H]
+        \centering
+        \caption{Table hrm\_contract — Contrats de travail}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Colonne} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    id               & UUID (PK)         & Identifiant unique. \\
+    employee\_id     & UUID (FK)         & Référence vers l'employé. \\
+    type             & VARCHAR(10)       & Type de contrat (CDD, CDI, STAGE, INTERIM). \\
+    date\_debut      & DATE              & Date de début du contrat. \\
+    date\_fin        & DATE (nullable)   & Date de fin (null pour CDI). \\
+    salaire\_base    & NUMERIC(15,2)     & Salaire de base mensuel en FCFA. \\
+    avantages\_nature & NUMERIC(15,2)    & Montant des avantages en nature. \\
+    periode\_essai   & INT               & Durée de la période d'essai en mois. \\
+    status           & VARCHAR(15)       & Statut du contrat (ACTIVE, EXPIRED, TERMINATED, RENEWED). \\
+    motif\_fin       & VARCHAR(255)      & Motif de fin de contrat. \\
+    document\_file\_id & UUID            & Référence vers le fichier du contrat (file-core). \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{hrm\_dependent}
+    \begin{table}[H]
+        \centering
+        \caption{Table hrm\_dependent — Personnes à charge}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Colonne} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    id               & UUID (PK)     & Identifiant unique. \\
+    employee\_id     & UUID (FK)     & Référence vers l'employé. \\
+    nom              & VARCHAR(100)  & Nom de famille. \\
+    prenom           & VARCHAR(100)  & Prénom. \\
+    date\_naissance  & DATE          & Date de naissance. \\
+    lien\_parente    & VARCHAR(30)   & Lien de parenté (enfant, conjoint, etc.). \\
+    certificat\_file\_id & UUID      & Référence vers le certificat justificatif. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{hrm\_payroll\_run}
+    \begin{table}[H]
+        \centering
+        \caption{Table hrm\_payroll\_run — Exécution de paie}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Colonne} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    id                     & UUID (PK)       & Identifiant unique. \\
+    periode                & VARCHAR(7)      & Période au format YYYY-MM (ex. 2026-03). \\
+    status                 & VARCHAR(15)     & Statut (DRAFT, CALCULATED, VALIDATED, PAID). \\
+    total\_brut            & NUMERIC(15,2)   & Total brut agrégé. \\
+    total\_net             & NUMERIC(15,2)   & Total net agrégé. \\
+    total\_cnps\_employe   & NUMERIC(15,2)   & Total des cotisations CNPS employé. \\
+    total\_cnps\_employeur & NUMERIC(15,2)   & Total des cotisations CNPS employeur. \\
+    total\_irpp            & NUMERIC(15,2)   & Total IRPP. \\
+    nb\_employes           & INT             & Nombre d'employés traités. \\
+    calculated\_at         & TIMESTAMPTZ     & Horodatage du calcul. \\
+    validated\_by          & UUID            & Identifiant du valideur. \\
+    validated\_at          & TIMESTAMPTZ     & Horodatage de la validation. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{hrm\_payroll\_entry}
+    \begin{table}[H]
+        \centering
+        \caption{Table hrm\_payroll\_entry — Ligne de paie par employé}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Colonne} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    id               & UUID (PK)       & Identifiant unique. \\
+    payroll\_run\_id & UUID (FK)       & Référence vers le PayrollRun. \\
+    employee\_id     & UUID (FK)       & Référence vers l'employé. \\
+    salaire\_base    & NUMERIC(15,2)   & Salaire de base du contrat. \\
+    brut             & NUMERIC(15,2)   & Salaire brut calculé. \\
+    net              & NUMERIC(15,2)   & Salaire net à payer. \\
+    cnps\_employe    & NUMERIC(15,2)   & Cotisation CNPS part salariale. \\
+    cnps\_employeur  & NUMERIC(15,2)   & Cotisation CNPS part patronale. \\
+    irpp             & NUMERIC(15,2)   & Impôt sur le revenu des personnes physiques. \\
+    cac              & NUMERIC(15,2)   & Centimes additionnels communaux (10\% de l'IRPP). \\
+    primes           & NUMERIC(15,2)   & Total des primes. \\
+    retenues         & NUMERIC(15,2)   & Total des retenues hors prêts. \\
+    avances\_deduites & NUMERIC(15,2)  & Montant des avances/prêts déduits. \\
+    payment\_status  & VARCHAR(15)     & Statut de paiement (PENDING, PROCESSING, COMPLETED, FAILED). \\
+    payment\_channel & VARCHAR(30)     & Canal de paiement utilisé. \\
+    account\_ref     & VARCHAR(30)     & Référence du compte de paiement. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{hrm\_payslip\_line}
+    \begin{table}[H]
+        \centering
+        \caption{Table hrm\_payslip\_line — Lignes de bulletin de paie}
+        \begin{tabularx}{\textwidth}{llX}
+    \toprule
+    \textbf{Colonne} & \textbf{Type} & \textbf{Description} \\
+    \midrule
+    id                 & UUID (PK)       & Identifiant unique. \\
+    payroll\_entry\_id & UUID (FK)       & Référence vers la PayrollEntry. \\
+    libelle            & VARCHAR(100)    & Libellé de la ligne (ex. « Salaire de base », « CNPS »). \\
+    type               & VARCHAR(15)     & EARNING (gain) ou DEDUCTION (retenue). \\
+    base               & NUMERIC(15,2)   & Montant de base pour le calcul. \\
+    taux               & NUMERIC(8,5)    & Taux appliqué. \\
+    montant            & NUMERIC(15,2)   & Montant calculé de la ligne. \\
+    ordre\_affichage   & INT             & Ordre d'affichage sur le bulletin. \\
+    \bottomrule
+        \end{tabularx}
+    \end{table}
+
+    \subsection{Tables restantes}
+
+    Les tables \texttt{hrm\_leave\_balance}, \texttt{hrm\_leave\_request}, \texttt{hrm\_loan\_advance}, \texttt{hrm\_training}, \texttt{hrm\_training\_enrollment}, \texttt{hrm\_performance\_review} et \texttt{hrm\_review\_objective} suivent les mêmes principes de conception. Leurs colonnes correspondent fidèlement aux attributs des classes de domaine décrits au chapitre 4. Les champs d'audit (\texttt{created\_by}, \texttt{created\_at}, \texttt{updated\_by}, \texttt{updated\_at}, \texttt{version}) sont présents sur toutes les entités sauf les objets valeur (\texttt{hrm\_payslip\_line}, \texttt{hrm\_review\_objective}).
+
+% ---
+
+    \section{Contraintes d'intégrité}
+
+    \begin{itemize}
+        \item Toutes les clés primaires sont des \texttt{UUID} générés côté applicatif.
+        \item Le \texttt{matricule} de l'employé est unique au niveau du tenant (\texttt{UNIQUE}).
+        \item Les clés étrangères (\texttt{employee\_id}, \texttt{payroll\_run\_id}, etc.) garantissent l'intégrité référentielle.
+        \item Le champ \texttt{version} assure le \textbf{verrouillage optimiste} : toute modification incrémente la version et échoue si la version en base a changé entre-temps.
+        \item Les montants monétaires utilisent \texttt{NUMERIC(15,2)} pour éviter les erreurs d'arrondi des types flottants.
+        \item Les horodatages utilisent \texttt{TIMESTAMPTZ} pour la gestion correcte des fuseaux horaires.
+    \end{itemize}
+
+
+% =============================================================================
+    \chapter{Règles métier et contraintes}
+% =============================================================================
+
+    \section{Règles de calcul de paie (législation camerounaise)}
+
+    \begin{reglemetier}[RM-01 : Calcul de la CNPS (Caisse Nationale de Prévoyance Sociale)]
+\begin{itemize}
+    \item \textbf{Part salariale (Pension Vieillesse)} :
+    \texttt{min(brut, plafond) $\times$ 4,2\%}
+    \item \textbf{Plafond mensuel (Pension Vieillesse uniquement)} : 750\,000 FCFA,
+    paramétrable via \texttt{settings-core}.
+\end{itemize}
+    \end{reglemetier}
+
+% ---
+
+    \begin{reglemetier}[RM-02 : Calcul de l'IRPP (Impôt sur le Revenu des Personnes Physiques)]
+\begin{itemize}
+    \item \textit{Exonération} : aucune retenue IRPP si \texttt{brut\_mensuel $<$ 62\,000 FCFA}.
+    \item Le net imposable mensuel est calculé ainsi (loi de finances 2024) :
+    \begin{itemize}
+        \item Si \texttt{brut $\leq$ 1\,333\,333 FCFA} :
+        \texttt{net\_imposable = brut $\times$ 0,70}
+        (abattement forfaitaire de 30\%)
+        \item Si \texttt{brut $>$ 1\,333\,333 FCFA} :
+        \texttt{net\_imposable = brut $-$ 400\,000}
+        (abattement plafonné à 400\,000 FCFA/mois)
+    \end{itemize}
+    \item \textbf{Barème progressif mensuel} (paramétrable via \texttt{settings-core}) :
+    \begin{itemize}
+        \item De 0 à 166\,667 FCFA : \textbf{10\%}
+        \item De 166\,668 à 250\,000 FCFA : \textbf{15\%}
+        \item De 250\,001 à 416\,667 FCFA : \textbf{25\%}
+        \item Au-delà de 416\,667 FCFA : \textbf{35\%}
+    \end{itemize}
+\end{itemize}
+    \end{reglemetier}
+
+% ---
+
+    \begin{reglemetier}[RM-03 : Centimes Additionnels Communaux (CAC)]
+Le CAC est calculé comme \textbf{10\% de l'IRPP} :
+\texttt{cac = irpp $\times$ 0,10}.\\
+\textit{Note : le seuil d'exonération de 62\,000 FCFA/mois s'applique également
+au CAC (si IRPP = 0, alors CAC = 0).}
+    \end{reglemetier}
+
+% ---
+
+    \begin{reglemetier}[RM-04 : Déduction automatique des prêts]
+Lors de chaque calcul de paie, la déduction pour prêt est :
+\texttt{min(mensualite, soldeRestant)}.
+Lorsque \texttt{soldeRestant} atteint 0, le prêt passe en statut
+\texttt{FULLY\_REPAID}.
+    \end{reglemetier}
+
+% ---
+
+    \begin{reglemetier}[RM-06 : Redevance Audiovisuelle (RAV)]
+La RAV est due par tous les salariés des secteurs privé, public et parapublic
+(Ordonnance n\textsuperscript{o}~89/004 du 12 décembre 1989).
+Elle est retenue à la source par l'employeur et reversée au profit de la CRTV.
+
+\begin{itemize}
+    \item \textbf{Base de calcul} : montant brut mensuel des salaires perçus.
+    \item \textbf{Barème forfaitaire mensuel} (paramétrable via \texttt{settings-core}) :
+\end{itemize}
+
+\begin{center}
+    \begin{tabular}{ll}
+        \hline
+        \textbf{Salaire brut mensuel (FCFA)} & \textbf{Montant RAV (FCFA)} \\
+        \hline
+        De 0 à 50\,000                     & 0       \\
+        De 50\,001 à 100\,000              & 750     \\
+        De 100\,001 à 200\,000             & 1\,950  \\
+        De 200\,001 à 300\,000             & 3\,250  \\
+        De 300\,001 à 400\,000             & 4\,550  \\
+        De 400\,001 à 500\,000             & 5\,850  \\
+        De 500\,001 à 600\,000             & 7\,150  \\
+        De 600\,001 à 700\,000             & 8\,450  \\
+        De 700\,001 à 800\,000             & 9\,750  \\
+        De 800\,001 à 900\,000             & 11\,050 \\
+        De 900\,001 à 1\,000\,000         & 12\,350 \\
+        Au-delà de 1\,000\,000            & 13\,000 \\
+        \hline
+    \end{tabular}
+\end{center}
+    \end{reglemetier}
+
+% ---
+
+    \begin{reglemetier}[RM-07 : Contribution au Crédit Foncier du Cameroun (CFC)]
+La CFC est une taxe parafiscale reversée au Crédit Foncier du Cameroun
+pour financer les projets d'habitat.
+
+\begin{itemize}
+    \item \textbf{Part salariale} : \texttt{brut $\times$ 1\%}
+    \item \textbf{Base de calcul} : montant brut total des rémunérations
+    (y compris avantages en espèces et en nature).
+    \item \textit{Note : le seuil d'exonération de 62\,000 FCFA/mois
+    s'applique également à la CFC.}
+\end{itemize}
+    \end{reglemetier}
+
+% ---
+    \begin{reglemetier}[RM-09 : Taxe de Développement Local (TDL)]
+La TDL est perçue par l'État et reversée aux communes en contrepartie
+des services de base rendus aux populations (éclairage public,
+assainissement, enlèvement des ordures, etc.).
+
+\begin{itemize}
+    \item \textbf{Base de calcul} : salaire de base mensuel.
+    \item \textbf{Barème forfaitaire annuel} (paramétrable via
+    \texttt{settings-core}, proratisé mensuellement) :
+\end{itemize}
+
+\begin{center}
+    \begin{tabular}{ll}
+        \hline
+        \textbf{Salaire de base mensuel (FCFA)} & \textbf{TDL annuelle (FCFA)} \\
+        \hline
+        De 62\,000 à 75\,000       & 3\,000  \\
+        De 75\,001 à 100\,000      & 6\,000  \\
+        De 100\,001 à 125\,000     & 9\,000  \\
+        De 125\,001 à 150\,000     & 12\,000 \\
+        De 150\,001 à 200\,000     & 15\,000 \\
+        De 200\,001 à 250\,000     & 18\,000 \\
+        De 250\,001 à 300\,000     & 24\,000 \\
+        De 300\,001 à 500\,000     & 27\,000 \\
+        Supérieure à 500\,000      & 30\,000 \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\textit{Note : en pratique, la TDL est souvent prélevée en une seule fois
+en début d'année ou répartie mensuellement (\texttt{tdl\_mensuelle = tdl\_annuelle / 12}).
+Le seuil de 62\,000 FCFA s'applique également ici.}
+    \end{reglemetier}
+
+% ---
+
+    \section{Règles d'acquisition des congés}
+
+    \begin{reglemetier}[RM-05 : Acquisition mensuelle de congés]
+\begin{itemize}
+    \item \textbf{Acquisition de base} : \textbf{1,5 jour ouvrable par mois}
+    (soit 18 jours ouvrables par an), conformément à l'article~89
+    du Code du travail (loi n\textsuperscript{o}~92/007 du 14 août 1992).
+
+    \item \textbf{Majoration pour ancienneté} (art.~90 al.~3) :
+    +2 jours ouvrables par tranche entière de 5 ans de service,
+    continue ou non.
+    \begin{itemize}
+        \item Ancienneté $\in [5, 10[$ ans  : \textbf{+2 jours/an}
+        (soit $+$0,167 jour/mois)
+        \item Ancienneté $\in [10, 15[$ ans : \textbf{+4 jours/an}
+        (soit $+$0,333 jour/mois)
+        \item Ancienneté $\in [15, 20[$ ans : \textbf{+6 jours/an}
+        (soit $+$0,500 jour/mois)
+        \item Et ainsi de suite par palier de 5 ans.
+    \end{itemize}
+    Formule générale :
+    \texttt{maj\_anciennete = floor(anciennete / 5) $\times$ 2} jours/an.
+
+    \item \textbf{Majoration pour enfants à charge}
+    (art.~90 al.~2 — \textit{mères salariées uniquement}) :
+    \begin{itemize}
+        \item Condition : enfant âgé de \textbf{moins de 6 ans} à la date
+        de départ en congé, inscrit à l'état civil et vivant au foyer.
+        \item Taux : $+$2 jours ouvrables par enfant éligible.
+        \item Exception : si le congé principal n'excède pas 6 jours,
+        la majoration est réduite à $+$1 jour par enfant.
+        \item Formule mensuelle :
+        \texttt{maj\_enfants = nb\_enfants\_moins\_6ans $\times$ 2 / 12}
+        jours/mois (plafond selon convention collective applicable).
+    \end{itemize}
+
+    \item \textbf{Cas particulier — jeunes travailleurs} (art.~90 al.~1) :
+    pour les salariés de \textbf{moins de 18 ans}, l'acquisition
+    est portée à \textbf{2,5 jours ouvrables/mois} (30 jours/an).
+
+    \item L'acquisition est exécutée automatiquement le
+    1\textsuperscript{er} de chaque mois par un job planifié.
+    Les majorations sont recalculées à chaque exécution sur la base
+    de l'ancienneté et de la situation familiale à jour.
+\end{itemize}
+    \end{reglemetier}
+% ---
+
+    \section{Paramètres de configuration (\texttt{settings-core})}
+
+    \subsection{Paramètres CNPS}
+
+    \begin{center}
+        \begin{tabular}{llll}
+            \hline
+            \textbf{Paramètre} & \textbf{Type} & \textbf{Valeur par défaut} & \textbf{Description} \\
+            \hline
+            \texttt{cnps\_plafond\_mensuel}    & Nombre      & 750\,000 FCFA & Plafond mensuel base cotisable (PV) \\
+            \texttt{cnps\_taux\_pv\_salarial}  & Pourcentage & 4,2\%         & Taux Pension Vieillesse part salariale \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+% ---
+
+    \subsection{Paramètres IRPP}
+
+    \begin{center}
+        \begin{tabular}{llll}
+            \hline
+            \textbf{Paramètre} & \textbf{Type} & \textbf{Valeur par défaut} & \textbf{Description} \\
+            \hline
+            \texttt{irpp\_seuil\_exoneration}         & Nombre      & 62\,000 FCFA    & Brut mensuel en dessous duquel IRPP\,=\,0 \\
+            \texttt{irpp\_seuil\_plafond\_abattement} & Nombre      & 1\,333\,333 FCFA & Seuil de plafonnement de l'abattement \\
+            \texttt{irpp\_abattement\_taux}           & Pourcentage & 30\%            & Taux d'abattement forfaitaire sur le brut \\
+            \texttt{irpp\_abattement\_plafond\_mensuel} & Nombre    & 400\,000 FCFA   & Plafond mensuel de l'abattement forfaitaire \\
+            \texttt{irpp\_tranches}                   & Tableau     & voir ci-dessous & Barème progressif mensuel \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \begin{reglemetier}[Détail : \texttt{irpp\_tranches} — Barème progressif mensuel]
+\begin{center}
+    \begin{tabular}{llll}
+        \hline
+        \textbf{Tranche} & \textbf{De (FCFA)} & \textbf{À (FCFA)} & \textbf{Taux} \\
+        \hline
+        T1 & 0          & 166\,667  & 10\% \\
+        T2 & 166\,668   & 250\,000  & 15\% \\
+        T3 & 250\,001   & 416\,667  & 25\% \\
+        T4 & 416\,668   & $+\infty$ & 35\% \\
+        \hline
+    \end{tabular}
+\end{center}
+    \end{reglemetier}
+
+% ---
+
+    \subsection{Paramètres CAC}
+
+    \begin{center}
+        \begin{tabular}{llll}
+            \hline
+            \textbf{Paramètre} & \textbf{Type} & \textbf{Valeur par défaut} & \textbf{Description} \\
+            \hline
+            \texttt{cac\_taux} & Pourcentage & 10\% & Taux CAC appliqué sur l'IRPP \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+% ---
+
+    \subsection{Paramètres RAV}
+
+    \begin{center}
+        \begin{tabular}{llll}
+            \hline
+            \textbf{Paramètre} & \textbf{Type} & \textbf{Valeur par défaut} & \textbf{Description} \\
+            \hline
+            \texttt{rav\_tranches} & Tableau & voir ci-dessous & Barème forfaitaire mensuel selon le brut \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \begin{reglemetier}[Détail : \texttt{rav\_tranches} — Barème forfaitaire mensuel]
+\begin{center}
+    \begin{tabular}{lll}
+        \hline
+        \textbf{De (FCFA)} & \textbf{À (FCFA)} & \textbf{Montant RAV (FCFA)} \\
+        \hline
+        0           & 50\,000     & 0       \\
+        50\,001     & 100\,000    & 750     \\
+        100\,001    & 200\,000    & 1\,950  \\
+        200\,001    & 300\,000    & 3\,250  \\
+        300\,001    & 400\,000    & 4\,550  \\
+        400\,001    & 500\,000    & 5\,850  \\
+        500\,001    & 600\,000    & 7\,150  \\
+        600\,001    & 700\,000    & 8\,450  \\
+        700\,001    & 800\,000    & 9\,750  \\
+        800\,001    & 900\,000    & 11\,050 \\
+        900\,001    & 1\,000\,000 & 12\,350 \\
+        1\,000\,001 & $+\infty$   & 13\,000 \\
+        \hline
+    \end{tabular}
+\end{center}
+    \end{reglemetier}
+
+% ---
+
+    \subsection{Paramètres CFC}
+
+    \begin{center}
+        \begin{tabular}{llll}
+            \hline
+            \textbf{Paramètre} & \textbf{Type} & \textbf{Valeur par défaut} & \textbf{Description} \\
+            \hline
+            \texttt{cfc\_taux\_salarial} & Pourcentage & 1\% & Taux CFC part salariale appliqué sur le brut \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+% ---
+
+    \subsection{Paramètres TDL}
+
+    \begin{center}
+        \begin{tabular}{llll}
+            \hline
+            \textbf{Paramètre} & \textbf{Type} & \textbf{Valeur par défaut} & \textbf{Description} \\
+            \hline
+            \texttt{tdl\_tranches}        & Tableau & voir ci-dessous & Barème forfaitaire annuel selon le salaire de base \\
+            \texttt{tdl\_mode\_prelevement} & Enum  & \texttt{MENSUEL} & \texttt{MENSUEL} (÷12/mois) ou \texttt{ANNUEL} (en janvier) \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \begin{reglemetier}[Détail : \texttt{tdl\_tranches} — Barème forfaitaire]
+\begin{center}
+    \begin{tabular}{llll}
+        \hline
+        \textbf{De (FCFA)} & \textbf{À (FCFA)} & \textbf{TDL annuelle (FCFA)} & \textbf{TDL mensuelle (FCFA)} \\
+        \hline
+        0           & 61\,999     & 0       & 0      \\
+        62\,000     & 75\,000     & 3\,000  & 250    \\
+        75\,001     & 100\,000    & 6\,000  & 500    \\
+        100\,001    & 125\,000    & 9\,000  & 750    \\
+        125\,001    & 150\,000    & 12\,000 & 1\,000 \\
+        150\,001    & 200\,000    & 15\,000 & 1\,250 \\
+        200\,001    & 250\,000    & 18\,000 & 1\,500 \\
+        250\,001    & 300\,000    & 24\,000 & 2\,000 \\
+        300\,001    & 500\,000    & 27\,000 & 2\,250 \\
+        500\,001    & $+\infty$   & 30\,000 & 2\,500 \\
+        \hline
+    \end{tabular}
+\end{center}
+    \end{reglemetier}
+
+% ---
+
+    \subsection{Paramètres Congés}
+
+    \begin{center}
+        \begin{tabular}{llll}
+            \hline
+            \textbf{Paramètre} & \textbf{Type} & \textbf{Valeur par défaut} & \textbf{Description} \\
+            \hline
+            \texttt{conge\_base\_jours\_mois}             & Nombre & 1,5  & Acquisition de base (jours ouvrables/mois) \\
+            \texttt{conge\_jeune\_travailleur\_jours\_mois} & Nombre & 2,5 & Acquisition pour les moins de 18 ans \\
+            \texttt{conge\_age\_limite\_jeune}            & Nombre & 18   & Âge limite régime jeune travailleur \\
+            \texttt{conge\_anciennete\_palier\_ans}       & Nombre & 5    & Palier d'ancienneté en années \\
+            \texttt{conge\_anciennete\_jours\_par\_palier} & Nombre & 2   & Jours supplémentaires par palier \\
+            \texttt{conge\_enfant\_age\_limite}           & Nombre & 6    & Âge limite enfants (mères uniquement) \\
+            \texttt{conge\_enfant\_jours\_par\_enfant}    & Nombre & 2    & Jours supplémentaires par enfant éligible \\
+            \hline
+        \end{tabular}
+    \end{center}
+
+    \section{Contraintes métier transverses}
+
+    \begin{reglemetier}[RM-06 : Unicité de la paie]
+        Un seul \texttt{PayrollRun} peut exister pour une combinaison donnée de (période, organizationId, agencyId). Toute tentative de doublon est rejetée avec une erreur HTTP 409.
+    \end{reglemetier}
+
+    \begin{reglemetier}[RM-07 : Unicité de l'employé par acteur]
+        Un seul \texttt{Employee} peut exister pour un \texttt{actorId} donné au sein d'un tenant. Cela évite les doublons lorsqu'un acteur est déjà enregistré.
+    \end{reglemetier}
+
+    \begin{reglemetier}[RM-08 : Contrat actif unique]
+        Un employé ne peut avoir qu'un seul contrat au statut \texttt{ACTIVE} à un instant donné.
+    \end{reglemetier}
+
+    \begin{reglemetier}[RM-09 : Vérification du solde de congés]
+        Une demande de congé ne peut être soumise que si le solde restant (acquis $-$ pris) est supérieur ou égal au nombre de jours demandés. En cas de solde insuffisant, l'erreur \texttt{InsufficientLeaveBalanceException} (HTTP 422) est retournée.
+    \end{reglemetier}
+
+    \begin{reglemetier}[RM-10 : Plafond de prêts]
+        Le cumul des soldes restants des prêts actifs d'un employé ne doit pas dépasser un plafond paramétrable. Ce plafond est vérifié lors de chaque nouvelle demande d'avance.
+    \end{reglemetier}
+
+
+% =============================================================================
+    \chapter{Glossaire}
+% =============================================================================
+
+    \begin{description}[style=nextline, leftmargin=4cm]
+  \item[Actor] Personne physique ou morale enregistrée dans \texttt{actor-core}. Un employé est lié à un acteur.
+  \item[Agence] Niveau le plus fin de la hiérarchie organisationnelle (succursale, filiale). Filtre optionnel.
+  \item[BaseEntity] Classe abstraite de \texttt{common-core} fournissant les champs id, tenantId, organizationId, audit et version.
+  \item[CAC] Centimes Additionnels Communaux — surtaxe communale égale à 10\% de l'IRPP.
+  \item[CDD] Contrat à Durée Déterminée.
+  \item[CDI] Contrat à Durée Indéterminée.
+  \item[CNPS] Caisse Nationale de Prévoyance Sociale (organisme camerounais de sécurité sociale).
+  \item[Core] Module fonctionnel autonome au sein de RT-Comops (ex. hrm-core, actor-core).
+  \item[FCFA] Franc CFA — monnaie utilisée dans les calculs de paie.
+  \item[IRPP] Impôt sur le Revenu des Personnes Physiques.
+  \item[Outbox] Pattern de publication fiable d'événements : l'événement est inséré dans une table dédiée au sein de la même transaction que la modification métier, puis relayé vers Kafka par un scheduler.
+  \item[PartyRef] Référence dénormalisée vers un acteur (partyId + displayName), définie dans \texttt{common-core}.
+  \item[PayrollRun] Exécution d'un cycle de paie pour une période, une organisation et optionnellement une agence.
+  \item[PayslipLine] Ligne de bulletin de paie (gain ou retenue) — objet valeur.
+  \item[R2DBC] Reactive Relational Database Connectivity — pilote réactif pour l'accès à PostgreSQL.
+  \item[Tenant] Locataire du système. Chaque tenant possède un schéma PostgreSQL dédié.
+  \item[WebFlux] Module réactif de Spring Framework pour le traitement non-bloquant des requêtes HTTP.
+    \end{description}
+
+%%% FIN CONTENU HRM-CORE %%%
+
+\end{document}
